@@ -1,0 +1,163 @@
+---
+title: 'Lab 1: Biological Data'
+output: pdf_document
+geometry: margin=3cm
+---
+
+```{r, echo=FALSE, warning=F}
+library(knitr)
+opts_chunk$set(tidy.opts=list(width.cutoff=10))
+```
+
+Adapted from Hijmans and Elith (2011) - https://cran.r-project.org/web/packages/dismo/vignettes/sdm.pdf
+
+###Aims
+
+
+* To obtain some species occurence data
+
+* To produce a map of the species' distribution
+
+First we need to install the packages needed for this practical:
+
+```{r, message=F, warning=FALSE, eval=F}
+install.packages("raster")
+install.packages("rgdal")
+install.packages("dismo")
+install.packages("rJava")
+install.packages("maptools")
+install.packages("maps")
+install.packages("mapdata")
+```
+
+```{r, message=F, warning=FALSE}
+library(raster)
+library(rgdal)
+library(dismo)
+library(rJava)
+library(maptools)
+library(maps)    
+library(mapdata) 
+```
+
+Next you need to create a folder to keep all of the files from this practical in, create separate folders for your species locations and for the environmental data. You will need to do this in your File Explorer and then set it as your working directory by putting in the correct file path in the code below. 
+
+```{r, eval=F}
+setwd("~/SDM_Course/Species_locs")
+```
+
+
+Now we can download species location data from GBIF, this code will download data for the Alpine ibex _(Capra ibex)_, but you can change it to the binomial of whichever species you are interested in.
+
+
+```{r}
+capra <-gbif("capra", "ibex", geo=FALSE)
+nrow(capra) #the number of location records
+```
+
+
+This will show you some of the information in the data, including the longitude and latitude. 
+
+
+```{r, eval=F}
+head(capra)
+```
+
+Some of the points have missing latitude and longitude data, so we need to remove those.
+
+
+```{r}
+capgeo <- subset(capra, !is.na(lon) & !is.na(lat)) 
+#remove points with missing lat and long with this
+```
+
+
+Now we can start plotting the data to make sure that they biologically make sense - are your species location points where you expect them to be?
+
+If they are you can skip to the last two steps.
+
+
+```{r}
+data(wrld_simpl)
+plot(wrld_simpl, xlim=c(min(capgeo$lon)-1,max(capgeo$lon)+1), 
+     ylim=c(min(capgeo$lat)-1,max(capgeo$lat)+1), axes=TRUE, 
+     col="light yellow")
+# restore the box around the map
+box()
+# plot points
+points(capgeo$lon, capgeo$lat, col="orange", pch=20, cex=0.75)
+```
+
+I am expecting my species locations to be in the European Alps, the other records may be other sub-species or where the lat and long are the wrong way round, or where negative symbols have been missed out. To deal with this we need to clean the data:
+
+First of all we can remove the duplicates:
+
+
+```{r}
+dups2 <- duplicated(capgeo[, c("lon", "lat")])
+sum(dups2) # number of duplicates
+capg <-capgeo[!dups2, ]  #removes duplicates
+```
+
+
+For this species I know that all of the lat/long values should be positive, so we can change any potentially erroneous negative values to be positive. This may not be the case for your species so think carefully about this before doing it.
+
+
+```{r}
+i <- capg$lon < 0     #are there negative lat/lon values for 
+                      #any locations - all should be positive, 
+                      #because of the expected distribution of this species
+capg$lon[i] <- -1 * capg$lon[i]
+j <-capg$lat < 0
+capg$lat[j] <- -1 * capg$lat[j]
+```
+
+
+Now we can plot the points again to see if we still have any erroneous points:
+
+
+```{r}
+plot(wrld_simpl, xlim=c(min(capg$lon)-1,max(capg$lon)+1), 
+     ylim=c(min(capg$lat)-1,max(capg$lat)+1), axes=TRUE, 
+     col="light yellow")
+box()
+points(capg$lon, capg$lat, col="orange", pch=20, cex=0.75)
+```
+
+
+It still looks like we have quite a few errors, so we can now subset out location points which are beyond certain latitudinal or longitudinal extents. Here we are only including locations between 0-25^o^E and more than 43^o^N.
+
+
+```{r}
+capg <- capg[capg$lon > 0 & capg$lon<25 & capg$lat > 43 , ] 
+nrow(capg) #we have a lot fewer rows than we started out with!
+```
+
+
+Let's plot the points againt to see if it looks more reasonable, this time with a higher resolution background map:
+  
+  
+```{r}
+map('worldHires',xlim=c(min(capg$lon)-1,max(capg$lon)+1), 
+    ylim=c(min(capg$lat)-1,max(capg$lat)+1), fill=T, 
+    col="light grey")
+map.axes()
+points(capg$lon, capg$lat, col="orange", pch=20, cex=0.75)
+
+```
+
+
+In order to enter the species locations into Maxent we need to create a csv (comma separated value) file with one column each for the species name, latitude and longitude
+
+
+```{r}
+capc<-capg[ , c("species","lat","lon")]
+write.csv(capc, "capra_locs.csv",row.names=FALSE)
+```
+
+
+The next step is to gather some environmental data to input into Maxent, which we will do in Lab 2.
+
+
+
+

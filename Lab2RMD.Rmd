@@ -1,0 +1,99 @@
+---
+title: "Lab 2: Environmental Data"
+output: pdf_document
+---
+
+###Aims
+
+* To view, clip, format and export environmental resource data
+
+
+First we need to install the packages needed for this practical:
+```{r, warning=F, message=F, eval=F}
+install.packages("raster")
+install.packages("maps")
+install.packages("mapdata")
+```
+
+```{r, warning=F, message=F}
+library(raster)
+library(maps)
+library(mapdata)
+```
+
+And to create a folder to put the environmental variables in - you will need to create the folder first before setting it as your working directory for this lab. This folder should be separate to the one you saved the species locations in.
+
+```{r, eval=F}
+setwd("C:/Users/Fiona/Desktop/SDM_Course/BioClim_Pres") 
+
+```
+
+Now we can download the bioclim data directly from Worldclim. The environmental data are made up of 19 bioclimatic variables, the details of which you can read about here: http://www.worldclim.org/bioclim
+
+
+```{r}
+
+env = getData("worldclim", var="bio", res=2.5)
+
+```
+
+We can plot the environmental data, here are the first and twelfth layers, annual mean temperature and annual precipitation, respectively.
+
+```{r}
+
+plot(env[[1]], main="Annual Mean Temperature")
+
+plot(env[[12]], main="Annual Precipitation")
+
+```
+
+
+The data is currently at a global level, it needs to be cropped to the area of interest so that Maxent does not try to run the model for the whole world.
+
+```{r, echo=F}
+capg<-read.csv("capra_locs.csv")
+```
+
+```{r}
+
+e<-extent(min(capg$lon)-1,max(capg$lon)+1,min(capg$lat)-1,max(capg$lat)+1)    
+#should be in the order xmin,xmax,ymin,ymax
+envcrop <- crop(env,e)
+
+```
+
+
+As you can see it is unlikely that annual mean temperature will vary from -200 - 300 degrees, the data are shown like this because the values are stored as integers (the real values multiplied by 10), so to see the 'real' values we can divide by 10.
+
+```{r}
+envcrop2<-envcrop/10
+
+```
+
+
+Now we can plot this cropped area, with 'real' values, with the location points on top.
+
+```{r}
+
+plot(envcrop2[[1]], main="Annual Mean Temperature")
+map('worldHires',xlim=c(min(capg$lon)-1,max(capg$lon)+1), 
+    ylim=c(min(capg$lat)-1,max(capg$lat)+1), fill=F, add=T)
+points(capg$lon, capg$lat, pch="+")
+
+```
+
+Now you need to pick which of the bioclimatic variables you want to include in the Maxent model, try and pick ones which are most ecologically relevant to your species. Here I have picked the bioclimatic variables 1, 4, 11, 12, 14 and 19. They need to be exported as ascii files so that they can be used in Maxent.
+
+```{r}
+#listenv <- unstack(envcrop)
+
+writeRaster(stack(envcrop2[[c(1,4,11,12,14,19)]]), names(envcrop2[[c(1,4,11,12,14,19)]]), 
+            bylayer=TRUE, format='ascii', overwrite=T)
+
+```
+
+Now you have a folder with your environmental ascii layers in, which you can now use with your species locations to build a model in Maxent.
+
+
+
+

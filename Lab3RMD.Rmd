@@ -1,0 +1,188 @@
+---
+title: 'Lab 3: Running Maxent SDM'
+output: pdf_document
+---
+```{r, echo=F}
+setwd("C:/Users/Fiona/Desktop/SDM_Course")
+
+```
+
+
+###Aims
+
+
+
+* To run an ecological niche model (species distribution model) using Maxent
+
+* To set a threshold of occurence
+
+* To map the model results
+
+
+
+The basis for this session’s lab is a software program developed by Steven Phillips, Miro Dudik and Rob Schapire, with support from AT&T Labs-Research, Princeton University, and the American Museum of Natural History. The software is free and can be downloaded from:
+
+
+http://www.cs.princeton.edu/~schapire/maxent/
+
+
+You should download the latest version (requires entering your name, institution, and email, and agreeing to the terms of use). It is simplest to download the Maxent.zip file, which includes maxent.jar and maxent.bat. The files should be unzipped and saved in the same directory. Note that the program can be used on any computer running Java version 1.4 or later (the Java runtime environment can be obtained from java.sun.com/javase/downloads; this is pre-installed in the classroom).
+
+
+
+The model is described in detail in the following paper.
+
+
+Phillips, S. J., R. P. Anderson, and R. E. Schapire. 2006. Maximum entropy modeling of species geographic distributions. Ecological Modelling 190:231-259.
+
+
+You might want to also download the tutorial provided on the website. Dr Phillips’ tutorial provides an introduction to the many features of Maxent, which you may be interested to explore further. However, in this document I pick out and the things you should complete for this course. I also outline some additional processes, including how to explore alternative thresholds and how to import your results in to ArcMap.
+
+
+There’s no need for our purposes to download the example datasets available on the web page. The data you have prepared in labs 1 and 2 is formatted (almost!) for use with Maxent, so you should use your own case study species.
+
+
+#### Part 1: Make a Maxent model
+
+
+
+
+To perform a model run, you need to supply a file containing species occurrence localities (“samples”), a directory containing environmental variables, and an output directory. You can use the species occurrence localities that you obtained in Lab 1. 
+
+
+Next, in Maxent, use the browse button under “Samples” to locate your .csv file.
+
+
+For your environmental layers, use the bioclim layers that you clipped to the appropriate region and converted to ascii grids in Lab 2. You could also include other environmental variables, for example from remote sensing. All layers should be in ascii grid format and all must have exactly the same header information. Use the Browse button under “Environmental layers” to locate your ascii grids, but note that while browsing for the environmental variables you are looking for the directory that contains them (you don’t need to browse down to the files in the directory).
+
+
+Select your own Output directory.
+
+For our purposes, we will use the logistic output format in Maxent (check the dropdown menu under “output format” is set to logistic) and we will ‘make pictures of predictions’ (ensure the box is checked). Other parts of the interface can be left as default. Now, your interface should look similar to this:
+
+![title](C:\Users\Fiona\Desktop\SDM_Course\maxent_pic.png)
+
+
+
+Now you are ready to run the model: hit Run!
+
+
+You will see progress bars as the model is created (the run may take a few minutes). On finishing, multiple output files are produced. 
+Look first at the html file (e.g., Capra_ibex.html). This includes a picture of your model. The image uses colors to indicate predicted probability that conditions are suitable, with red indicating high probability of suitable conditions for the species, green indicating conditions typical of those where the species is found, and lighter shades of blue indicating low predicted probability of suitable conditions.
+
+
+The species occurrence localities that you used to build the model are shown as white squares.
+
+
+Here is the Maxent model for the Alpine ibex, which I have used as an example:
+
+
+![title](C:\Users\Fiona\Desktop\SDM_Course\Capra_ibex.png)
+
+
+
+
+Does your model make sense? Are the patterns as you expected?
+
+
+
+#### Part 2: Setting a decision threshold  in R
+
+
+
+The picture in the html file is for quick viewing, but it is useful to import the data into R for drawing a neater map and for subsequent analysis. Notice that the software has created an ASCII grid file in your output directory (e.g., Capra_ibex.asc). This file contains the model results, exactly as plotted in the html file, and can be imported into R, ArcMap (or another GIS).
+
+
+
+First of all let's install the packages needed for this section.
+
+```{r, eval=FALSE, message=F}
+install.packages("rasterVis")
+install.packages("maps")
+install.packages("maptools")
+install.packages("ggplot2")
+```
+```{r, warning=FALSE, message=FALSE}
+library(rasterVis)
+library(maps)
+library(mapdata)
+library(ggplot2)
+```
+
+```{r, echo=F}
+capg<-read.csv("capra_locs.csv")
+```
+
+
+Next let's input this file back into R as a raster and have a look at it.
+```{r}
+capout<-raster("C:/Users/Fiona/Desktop/SDM_Course/MaxentOutput/Capra_ibex.asc")
+plot(capout)
+points(capg$lon, capg$lat, pch="+")
+```
+
+
+Now, it is often desirable to set a decision threshold (threshold of occurrence) above which the environment is considered to be suitable. Our goal is thus to convert the probability of occurrence that is predicted by Maxent to a binary ‘present/absent’ prediction. There a several possible approaches to setting a threshold, but the two common ones that we will look at here are the ‘minimum training presence’ (the largest possible threshold, and hence smallest area, that does not result in omission of any of the occurrence records) and the ’10 percentile training presence’ (the largest threshold that leaves out 10% of occurrence records). The Maxent software calculates these thresholds for you – see the table in the html file, for example:
+
+
+
+![title](C:\Users\Fiona\Desktop\SDM_Course\threshold.png)
+
+
+
+We are working with Logistic model output, so we can ignore the first column. The second column gives the number we will use. The fourth column informs us the fraction of the study are that is considered ‘present’ or ‘suitable’ if we use this threshold, and the fifth column tells us the proportion of occurrence records that are omitted from the prediction (the omission rate). Of course, the omission rate must be 0.0 for the minimum training presence threshold (since the threshold is set to not allow any omission) and the omission rate must be 0.1 (or very close) for the 10 percentile threshold (since the threshold is set to give 10% omission). Note that we will look at this table in more detail in Lab 4.
+
+
+
+For now, we can use the thresholds from this table (e.g., 0.011, 0.262) to redraw our map as a binary prediction. To do this we need to create a matrix to set the thresholds for the areas which are considered 'suitable' or 'unsuitable'. The first column in the matrix created below represents the 'from' values and the second column represents the 'to' values and the third column sets what those values should be set to. So here we are setting anything 0-0.011 to 0 and anything 0.011-1 as 1.
+
+
+
+```{r}
+m <- c(0,0.011,0,0.011,1,1)
+rclmat <- matrix(m, ncol=3, byrow=TRUE)
+
+rclmat #the reclassifying matrix
+
+rc <- reclassify(capout, rclmat)
+
+plot(rc)
+map('worldHires',xlim=c(min(capg$lon)-1,max(capg$lon)+1), 
+    ylim=c(min(capg$lat)-1,max(capg$lat)+1), fill=F, add=T)
+points(capg$lon, capg$lat, pch="+")
+
+```
+
+
+Let's try the 10 percentile training presence threshold to see what difference that makes.
+
+
+```{r}
+n <- c(0,0.262,0,0.262,1,1)
+rclmat2 <- matrix(n, ncol=3, byrow=TRUE)
+
+rclmat2 #the reclassifying matrix
+
+rc2 <- reclassify(capout, rclmat2)
+```
+
+
+```{r}
+plot(rc2)
+map('worldHires',xlim=c(min(capg$lon)-1,max(capg$lon)+1), 
+    ylim=c(min(capg$lat)-1,max(capg$lat)+1), fill=F, add=T)
+points(capg$lon, capg$lat, pch="+")
+
+
+###There are lots of different ways to plot things in R - the package ggplot2 has vast capabilities
+
+p<-gplot(rc2) +geom_raster(aes(fill = factor(value))) +coord_equal()
+p+ scale_fill_manual(values=c('light grey','dark green'),name="Predicted Suitability",
+   breaks=c("0", "1"), labels=c("Unsuitable", "Suitable")) + xlab("Longitude") +ylab("Latitude")+ggtitle("Predicted Suitable Habitat for Alpine Ibex") +guides(fill=guide_legend(title=NULL))
+
+```
+
+
+Experiment with different ways of mapping the resulting data, above are just two examples.
+
+
