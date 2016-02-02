@@ -28,6 +28,7 @@ install.packages("rJava")
 install.packages("maptools")
 install.packages("maps")
 install.packages("mapdata")
+install.packages("ggplot2")
 ```
 
 ```{r, message=F, warning=FALSE}
@@ -37,7 +38,8 @@ library(dismo)
 library(rJava)
 library(maptools)
 library(maps)    
-library(mapdata) 
+library(mapdata)
+library(ggplot2)
 ```
 
 Next you need to create a folder to keep all of the files from this practical in, create separate folders for your species locations and for the environmental data. You will need to do this in your File Explorer and then set it as your working directory by putting in the correct file path in the code below. 
@@ -56,7 +58,7 @@ nrow(capra) #the number of location records
 ```
 
 
-This will show you some of the information in the data, including the longitude and latitude. 
+This will show you some of the information in the data, including the longitude and latitude, which are the bits of information  we really need. 
 
 
 ```{r, eval=F}
@@ -81,21 +83,23 @@ If they are you can skip to the last two steps.
 data(wrld_simpl)
 plot(wrld_simpl, xlim=c(min(capgeo$lon)-1,max(capgeo$lon)+1), 
      ylim=c(min(capgeo$lat)-1,max(capgeo$lat)+1), axes=TRUE, 
-     col="light yellow")
-# restore the box around the map
-box()
-# plot points
-points(capgeo$lon, capgeo$lat, col="orange", pch=20, cex=0.75)
+     col="light yellow") #This plots a world map to the extent of maximum and minimum latitude and longitude (plus 1 degree).
+
+box() # restore the box around the map
+
+points(capgeo$lon, capgeo$lat, col="orange", pch=20, cex=0.75) # plot points
 ```
 
-I am expecting my species locations to be in the European Alps, the other records may be other sub-species or where the lat and long are the wrong way round, or where negative symbols have been missed out. To deal with this we need to clean the data:
+I am expecting my species locations to be in the European Alps, the other records may be other sub-species or locations where the latitude and longitude are the wrong way round, or where negative symbols have been missed out. To deal with this we need to clean the data:
 
 First of all we can remove the duplicates:
 
 
 ```{r}
-dups2 <- duplicated(capgeo[, c("lon", "lat")])
+dups2 <- duplicated(capgeo[, c("lon", "lat")]) #this identifies rows in the data which have the same latitude and longitude. It is also good to remove duplicates as it will make the modelling process faster
+
 sum(dups2) # number of duplicates
+
 capg <-capgeo[!dups2, ]  #removes duplicates
 ```
 
@@ -104,9 +108,7 @@ For this species I know that all of the lat/long values should be positive, so w
 
 
 ```{r}
-i <- capg$lon < 0     #are there negative lat/lon values for 
-                      #any locations - all should be positive, 
-                      #because of the expected distribution of this species
+i <- capg$lon < 0     #are there negative lat/lon values for any locations - all should be positive, because of the expected distribution of this species. This might not be the case for your species.
 capg$lon[i] <- -1 * capg$lon[i]
 j <-capg$lat < 0
 capg$lat[j] <- -1 * capg$lat[j]
