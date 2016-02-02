@@ -176,28 +176,28 @@ countries <- readOGR("ne_50m_admin_0_countries.shp", layer="ne_50m_admin_0_count
 
 coordinates(capc)<-c("lat","lon")
 proj4string(capc) <- CRS("+proj=longlat")
+capc_df<-data.frame(capc)
+wmap_df<-fortify(wmap)
+countries_df<-fortify(countries)
 
-capc_laea<-spTransform(capc, CRS("+proj=laea"))
-wmap_laea<- spTransform(wmap, CRS("+proj=laea"))    
-countries_laea<-spTransform(countries, CRS("+proj=laea"))
 
-capc_laea_df<-data.frame(capc_laea)
-wmap_laea_df<-fortify(wmap_laea)
-countries_laea_df<-fortify(countries_laea)
-
-xmin<-min(capc_laea_df$lon)
-xmax<-max(capc_laea_df$lon)
-ymin<-min(capc_laea_df$lat)
-ymax<-max(capc_laea_df$lat)
-buff<-100000
+xmin<-min(capc_df$lon)
+xmax<-max(capc_df$lon)
+ymin<-min(capc_df$lat)
+ymax<-max(capc_df$lat)
+buff<-0.5
 
 ggplot() + 
-  geom_polygon(data=wmap_laea_df, aes(long,lat,group=group), fill="white")+
-  geom_path(data=countries_laea_df, aes(long,lat, group=group), color="light grey",size=0.1)+
-  geom_point(data=capc_laea_df, aes(lon, lat), color="red") +
+  geom_polygon(data=wmap_df, aes(long,lat,group=group), fill="white")+
+  geom_path(data=countries_df, aes(long,lat, group=group), color="light grey",size=0.1)+
+  geom_point(data=capc_df, aes(lon, lat), color="red") +
   coord_cartesian(xlim = c((xmin-buff),(xmax+buff)), ylim = c((ymin-buff),(ymax+buff))) +
   theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
     
+
+
+
+
 
 
 
