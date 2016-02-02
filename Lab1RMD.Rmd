@@ -131,7 +131,8 @@ It still looks like we have quite a few errors, so we can now subset out locatio
 
 
 ```{r}
-capg <- capg[capg$lon > 0 & capg$lon<25 & capg$lat > 43 , ] 
+capg <- capg[capg$lon > 0 & capg$lon<25 & capg$lat > 43 , ]  #you will need to change these values to ones are relevant to your species.
+
 nrow(capg) #we have a lot fewer rows than we started out with!
 ```
 
@@ -160,6 +161,48 @@ write.csv(capc, "capra_locs.csv",row.names=FALSE)
 
 The next step is to gather some environmental data to input into Maxent, which we will do in Lab 2.
 
+
+
+Optional extras to make more attractive map using ggplot2 - you need to download the following data for this:
+
+- world outline:
+- country borders:
+
+
+```{r}
+
+wmap <- readOGR(dsn="ne_50m_land.shp", layer="ne_50m_land")
+countries <- readOGR("ne_50m_admin_0_countries.shp", layer="ne_50m_admin_0_countries")
+
+coordinates(capc)<-c("lat","lon")
+proj4string(capc) <- CRS("+proj=longlat")
+
+capc_laea<-spTransform(capc, CRS("+proj=laea"))
+wmap_laea<- spTransform(wmap, CRS("+proj=laea"))    
+countries_laea<-spTransform(countries, CRS("+proj=laea"))
+
+capc_laea_df<-data.frame(capc_laea)
+wmap_laea_df<-fortify(wmap_laea)
+countries_laea_df<-fortify(countries_laea)
+
+xmin<-min(capc_laea_df$lon)
+xmax<-max(capc_laea_df$lon)
+ymin<-min(capc_laea_df$lat)
+ymax<-max(capc_laea_df$lat)
+buff<-100000
+
+ggplot() + 
+  geom_polygon(data=wmap_laea_df, aes(long,lat,group=group), fill="white")+
+  geom_path(data=countries_laea_df, aes(long,lat, group=group), color="light grey",size=0.1)+
+  geom_point(data=capc_laea_df, aes(lon, lat), color="red") +
+  coord_cartesian(xlim = c((xmin-buff),(xmax+buff)), ylim = c((ymin-buff),(ymax+buff))) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
+    
+
+
+
+
+```
 
 
 
