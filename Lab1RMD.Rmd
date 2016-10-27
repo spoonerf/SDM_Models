@@ -1,7 +1,9 @@
 ---
 title: 'Lab 1: Biological Data'
-output: pdf_document
+author: "Tutorial by Fiona Spooner, following tutorials by Richard Pearson for courses at UCL"
+output: html_document
 geometry: margin=3cm
+
 ---
 
 ```{r, echo=FALSE, warning=F}
@@ -9,7 +11,11 @@ library(knitr)
 opts_chunk$set(tidy.opts=list(width.cutoff=10))
 ```
 
-Adapted from Hijmans and Elith (2011) - https://cran.r-project.org/web/packages/dismo/vignettes/sdm.pdf
+The following video by Richard Pearson is relevant for both this Lab and Lab 2:
+
+https://www.youtube.com/watch?v=8inEr1c2UmE&list=PLKYTvTbXFuChaoF-L-1e9RzCagdLPQcCU&index=3
+
+Additionally, a lot of the material in these practicals are adapted from Hijmans and Elith (2011) - https://cran.r-project.org/web/packages/dismo/vignettes/sdm.pdf
 
 ###Aims
 
@@ -21,28 +27,26 @@ Adapted from Hijmans and Elith (2011) - https://cran.r-project.org/web/packages/
 First we need to install the packages needed for this practical:
 
 ```{r, message=F, warning=FALSE, eval=F}
-install.packages("raster")
-install.packages("rgdal")
 install.packages("dismo")
-install.packages("rJava")
 install.packages("maptools")
 install.packages("maps")
 install.packages("mapdata")
-install.packages("ggplot2")
 ```
+
+Then we need to load the packages into R using the library() command:
+
+You only need to install the packages onto your computer once but each time you open R you will need to use the library() command to call up the packages you wish to use.
 
 ```{r, message=F, warning=FALSE}
-library(raster)
-library(rgdal)
 library(dismo)
-library(rJava)
 library(maptools)
 library(maps)    
-library(mapdata)
-library(ggplot2)
+library(mapdata) 
 ```
 
+
 Next you need to create a folder to keep all of the files from this practical in, create separate folders for your species locations and for the environmental data. You will need to do this in your File Explorer and then set it as your working directory by putting in the correct file path in the code below. 
+
 
 ```{r, eval=F}
 setwd("~/SDM_Course/Species_locs")
@@ -52,64 +56,121 @@ setwd("~/SDM_Course/Species_locs")
 Now we can download species location data from GBIF, this code will download data for the Alpine ibex _(Capra ibex)_, but you can change it to the binomial of whichever species you are interested in.
 
 
+####Downloading Data
+
 ```{r}
 capra <-gbif("capra", "ibex", geo=FALSE)
-nrow(capra) #the number of location records
+```
+
+The gbif() command is from the "dismo" package - if you had problems with installing it you can download the data directly from the GBIF website - http://www.gbif.org/   (You'll need to create an account). If dismo worked then skip ahead to  "Looking at the downloaded data"
+
+
+To download the data manually:
+
+Data -> Explore Species -> Type in your species -> Click on the name of your species -> Click "All X,XXX" to the right of the map -> Download -> Select Darwin Core Archive -> Download and extract file -> Copy and paste "occurrence.txt" to the folder you previously set as the working directory 
+
+Here we also create two new columns, "lon" and "lat" so that the column names are the same as the data downloaded using the gbif function.
+
+```{r, eval=FALSE}
+
+capra<- read.delim("occurrence.txt",header = TRUE) 
+
+capra$lon<-capra$decimalLongitude
+capra$lat<-capra$decimalLatitude
+
 ```
 
 
-This will show you some of the information in the data, including the longitude and latitude, which are the bits of information  we really need. 
+####Looking at the downloaded data
+
+We can count the number of records downloaded using the nrow() command
+
+```{r}
+nrow(capra) 
+```
+
+
+The head() command will show you the first six rows of the data, including the longitude and latitude. A similar command is tail() for looking at the last six rows in the data.
 
 
 ```{r, eval=F}
 head(capra)
 ```
 
-Some of the points have missing latitude and longitude data, so we need to remove those.
+The key information we need from these data are the latitude and longitude, some of the downloaded points will be missing this information, so we can remove those.
 
+Here we use a combination of the subset() command which you can use to subset your data based on any definable characteristics and the is.na() command which will return a TRUE if the argument enter is NA and FALSE if it is not. 
+
+The "!" in front of is.na() causes the command to return the opposite of what it normally would, so in effect we are asking if the argument is not NA, so it will return TRUE if there is a non-NA value and FALSE if there is an NA.
+
+So, in this line of code we are subsetting our data to those values where both the longitude (lon) AND latitude (lat) are not NA values and therefore we have a location point for that row of data.
+
+
+####Removing data with no coordinates
 
 ```{r}
 capgeo <- subset(capra, !is.na(lon) & !is.na(lat)) 
-#remove points with missing lat and long with this
+
+nrow(capgeo)
 ```
 
 
-Now we can start plotting the data to make sure that they biologically make sense - are your species location points where you expect them to be?
+Now we can start plotting the data to make sure that they are where you expect them to be.
 
-If they are you can skip to the last two steps.
+The "maptools" package has some maps already built into it, here we use the "wrld_simpl" one as a quick way of visualising the data. 
+
+Here we have altered the extent of the frame, the xlim and ylim values. They have been changed to ensure that the extent of the map is one degree wider than the furthest location points.
+
+The box() command plots an empty box around the frame of the map as the axes can get cut off where they overlap with land.
+
+The points() command plots the location points on top of the map, the pch argument selects the character used to represent location points and the cex argument can be used to change the size of the points.
+
+####Plotting the occurrence points
 
 
 ```{r}
 data(wrld_simpl)
 plot(wrld_simpl, xlim=c(min(capgeo$lon)-1,max(capgeo$lon)+1), 
      ylim=c(min(capgeo$lat)-1,max(capgeo$lat)+1), axes=TRUE, 
-     col="light yellow") #This plots a world map to the extent of maximum and minimum latitude and longitude (plus 1 degree).
+     col="light grey")
 
-box() # restore the box around the map
+box()
 
-points(capgeo$lon, capgeo$lat, col="orange", pch=20, cex=0.75) # plot points
+points(capgeo$lon, capgeo$lat, col="orange", pch=20, cex=0.7)
 ```
 
-I am expecting my species locations to be in the European Alps, the other records may be other sub-species or locations where the latitude and longitude are the wrong way round, or where negative symbols have been missed out. To deal with this we need to clean the data:
+This plot shows all of the possible pch options in a variety of cex sizes.
 
-First of all we can remove the duplicates:
+```{r}
+plot(1:20, 1:20, pch=1:20, cex=rep(1:4))
+```
+
+If your species locations are where you would expect then you can skip to the last two steps.
+
+I am expecting my species locations to be in the European Alps, the other records may be other sub-species, where the lat and long are the wrong way round, where negative symbols have been missed out, or sometimes when the species is found in a zoo. To deal with this we need to clean the data:
+
+We need to remove the duplicates, firstly we can do this by identifyinf them using the duplicated() command, which provides a TRUE if the combination of longitude and latitude are a duplicate or FALSE if they are unique. Secondly we can use the square brackets to remove the rows of our data frame which are recorded as having a duplicate. 
+
+
+####Cleaning the data
+
+```{r}
+dups <- duplicated(capgeo[, c("lon", "lat")])
+sum(dups) 
+capg <-capgeo[!dups, ]
+nrow(capg)
+```
+
+
+For this species I know that all of the latitude and longitude values should be positive, because I expect it to be only found in the northern and eastern hemispeheres.This means we can change any potentially erroneous negative values to be positive. This may not be the case for your species so think carefully about this before doing it.
+
+First of all we identify any values that have a negative longitude value, then multiply these longitude values by negative one so that they are now positive. Then do the same with the latitude values.
 
 
 ```{r}
-dups2 <- duplicated(capgeo[, c("lon", "lat")]) #this identifies rows in the data which have the same latitude and longitude. It is also good to remove duplicates as it will make the modelling process faster
-
-sum(dups2) # number of duplicates
-
-capg <-capgeo[!dups2, ]  #removes duplicates
-```
-
-
-For this species I know that all of the lat/long values should be positive, so we can change any potentially erroneous negative values to be positive. This may not be the case for your species so think carefully about this before doing it.
-
-
-```{r}
-i <- capg$lon < 0     #are there negative lat/lon values for any locations - all should be positive, because of the expected distribution of this species. This might not be the case for your species.
+i <- capg$lon < 0    
 capg$lon[i] <- -1 * capg$lon[i]
+
 j <-capg$lat < 0
 capg$lat[j] <- -1 * capg$lat[j]
 ```
@@ -121,88 +182,50 @@ Now we can plot the points again to see if we still have any erroneous points:
 ```{r}
 plot(wrld_simpl, xlim=c(min(capg$lon)-1,max(capg$lon)+1), 
      ylim=c(min(capg$lat)-1,max(capg$lat)+1), axes=TRUE, 
-     col="light yellow")
+     col="light grey")
 box()
 points(capg$lon, capg$lat, col="orange", pch=20, cex=0.75)
 ```
 
 
-It still looks like we have quite a few errors, so we can now subset out location points which are beyond certain latitudinal or longitudinal extents. Here we are only including locations between 0-25^o^E and more than 43^o^N.
+It still looks like we have quite a few errors, so we can now subset out location points which are beyond certain latitudinal or longitudinal extents. Here we are only including locations between 0-25^o^E and more than 43^o^N, this is because I know this is an alpine species so I am only including those points. 
 
 
 ```{r}
-capg <- capg[capg$lon > 0 & capg$lon<25 & capg$lat > 43 , ]  #you will need to change these values to ones are relevant to your species.
-
-nrow(capg) #we have a lot fewer rows than we started out with!
+capg2 <- capg[capg$lon > 0 & capg$lon<25 & capg$lat > 43 , ] 
+nrow(capg2) 
 ```
 
 
-Let's plot the points againt to see if it looks more reasonable, this time with a higher resolution background map:
-  
+Let's plot the points againt to see if it looks more reasonable, this time with a higher resolution background map, using the "maps" and "mapdata" package:
+
+####Plotting the cleaned occurrence points
   
 ```{r}
-map('worldHires',xlim=c(min(capg$lon)-1,max(capg$lon)+1), 
-    ylim=c(min(capg$lat)-1,max(capg$lat)+1), fill=T, 
+map('worldHires',xlim=c(min(capg2$lon)-1,max(capg2$lon)+1), 
+    ylim=c(min(capg2$lat)-1,max(capg2$lat)+1), fill=T, 
     col="light grey")
 map.axes()
-points(capg$lon, capg$lat, col="orange", pch=20, cex=0.75)
+points(capg2$lon, capg2$lat, col="orange", pch=20, cex=0.75)
 
 ```
 
+Some of the location points may look unusually evenly spaced, why might this be?
 
-In order to enter the species locations into Maxent we need to create a csv (comma separated value) file with one column each for the species name, latitude and longitude
 
+In order to enter the species locations into Maxent we need to create a csv (comma separated value) file with one column each for the species name, latitude and longitude. This file will automatically be saved in the working directory.
+
+
+####Saving the occurences ready for Maxent
 
 ```{r}
-capc<-capg[ , c("species","lat","lon")]
+capc<-capg2[ , c("species","lat","lon")]
 write.csv(capc, "capra_locs.csv",row.names=FALSE)
 ```
 
 
 The next step is to gather some environmental data to input into Maxent, which we will do in Lab 2.
 
-
-
-Optional extras to make more attractive map using ggplot2 - you need to download the following data for this:
-
-- world outline:
-- country borders:
-
-
-```{r}
-
-wmap <- readOGR(dsn="ne_50m_land.shp", layer="ne_50m_land")
-countries <- readOGR("ne_50m_admin_0_countries.shp", layer="ne_50m_admin_0_countries")
-
-coordinates(capc)<-c("lat","lon")
-proj4string(capc) <- CRS("+proj=longlat")
-capc_df<-data.frame(capc)
-wmap_df<-fortify(wmap)
-countries_df<-fortify(countries)
-
-
-xmin<-min(capc_df$lon)
-xmax<-max(capc_df$lon)
-ymin<-min(capc_df$lat)
-ymax<-max(capc_df$lat)
-buff<-0.5
-
-ggplot() + 
-  geom_polygon(data=wmap_df, aes(long,lat,group=group), fill="white")+
-  geom_path(data=countries_df, aes(long,lat, group=group), color="light grey",size=0.1)+
-  geom_point(data=capc_df, aes(lon, lat), color="red") +
-  coord_cartesian(xlim = c((xmin-buff),(xmax+buff)), ylim = c((ymin-buff),(ymax+buff))) +
-  theme(panel.border = element_rect(colour = "black", fill=NA, size=1))
-    
-
-
-
-
-
-
-
-
-```
 
 
 
