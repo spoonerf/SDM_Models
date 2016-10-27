@@ -1,6 +1,6 @@
 ---
 title: 'Lab 3: Running Maxent SDM'
-output: pdf_document
+output: word_document
 ---
 ```{r, echo=F}
 setwd("C:/Users/Fiona/Desktop/SDM_Course")
@@ -20,7 +20,7 @@ setwd("C:/Users/Fiona/Desktop/SDM_Course")
 
 
 
-The basis for this session’s lab is a software program developed by Steven Phillips, Miro Dudik and Rob Schapire, with support from AT&T Labs-Research, Princeton University, and the American Museum of Natural History. The software is free and can be downloaded from:
+The basis for this session's lab is a software program developed by Steven Phillips, Miro Dudik and Rob Schapire, with support from AT&T Labs-Research, Princeton University, and the American Museum of Natural History. The software is free and can be downloaded from:
 
 
 http://www.cs.princeton.edu/~schapire/maxent/
@@ -36,10 +36,10 @@ The model is described in detail in the following paper.
 Phillips, S. J., R. P. Anderson, and R. E. Schapire. 2006. Maximum entropy modeling of species geographic distributions. Ecological Modelling 190:231-259.
 
 
-You might want to also download the tutorial provided on the website. Dr Phillips’ tutorial provides an introduction to the many features of Maxent, which you may be interested to explore further. However, in this document I pick out and the things you should complete for this course. I also outline some additional processes, including how to explore alternative thresholds and how to import your results in to ArcMap.
+You might want to also download the tutorial provided on the website. Dr Phillips' tutorial provides an introduction to the many features of Maxent, which you may be interested to explore further. However, in this document I pick out and the things you should complete for this course. I also outline some additional processes, including how to explore alternative thresholds and how to import your results in to ArcMap.
 
 
-There’s no need for our purposes to download the example datasets available on the web page. The data you have prepared in labs 1 and 2 is formatted (almost!) for use with Maxent, so you should use your own case study species.
+There's no need for our purposes to download the example datasets available on the web page. The data you have prepared in labs 1 and 2 is formatted (almost!) for use with Maxent, so you should use your own case study species.
 
 
 #### Part 1: Make a Maxent model
@@ -47,18 +47,18 @@ There’s no need for our purposes to download the example datasets available on
 
 
 
-To perform a model run, you need to supply a file containing species occurrence localities (“samples”), a directory containing environmental variables, and an output directory. You can use the species occurrence localities that you obtained in Lab 1. 
+To perform a model run, you need to supply a file containing species occurrence localities ('samples'), a directory containing environmental variables, and an output directory. You can use the species occurrence localities that you obtained in Lab 1. 
 
 
-Next, in Maxent, use the browse button under “Samples” to locate your .csv file.
+Next, in Maxent, use the browse button under 'Samples' to locate your .csv file.
 
 
-For your environmental layers, use the bioclim layers that you clipped to the appropriate region and converted to ascii grids in Lab 2. You could also include other environmental variables, for example from remote sensing. All layers should be in ascii grid format and all must have exactly the same header information. Use the Browse button under “Environmental layers” to locate your ascii grids, but note that while browsing for the environmental variables you are looking for the directory that contains them (you don’t need to browse down to the files in the directory).
+For your environmental layers, use the bioclim layers that you clipped to the appropriate region and converted to ascii grids in Lab 2. You could also include other environmental variables, for example from remote sensing. All layers should be in ascii grid format and all must have exactly the same header information. Use the Browse button under 'Environmental layers' to locate your ascii grids, but note that while browsing for the environmental variables you are looking for the directory that contains them (you don't need to browse down to the files in the directory).
 
 
 Select your own Output directory.
 
-For our purposes, we will use the logistic output format in Maxent (check the dropdown menu under “output format” is set to logistic) and we will ‘make pictures of predictions’ (ensure the box is checked). Other parts of the interface can be left as default. Now, your interface should look similar to this:
+For our purposes, we will use the logistic output format in Maxent (check the dropdown menu under 'output format' is set to logistic) and we will 'make pictures of predictions' (ensure the box is checked). Other parts of the interface can be left as default. Now, your interface should look similar to this:
 
 ![title](C:\Users\Fiona\Desktop\SDM_Course\maxent_pic.png)
 
@@ -122,7 +122,7 @@ points(capg$lon, capg$lat, pch="+")
 ```
 
 
-Now, it is often desirable to set a decision threshold (threshold of occurrence) above which the environment is considered to be suitable. Our goal is thus to convert the probability of occurrence that is predicted by Maxent to a binary ‘present/absent’ prediction. There a several possible approaches to setting a threshold, but the two common ones that we will look at here are the ‘minimum training presence’ (the largest possible threshold, and hence smallest area, that does not result in omission of any of the occurrence records) and the ’10 percentile training presence’ (the largest threshold that leaves out 10% of occurrence records). The Maxent software calculates these thresholds for you – see the table in the html file, for example:
+Now, it is often desirable to set a decision threshold (threshold of occurrence) above which the environment is considered to be suitable. Our goal is thus to convert the probability of occurrence that is predicted by Maxent to a binary 'present/absent' prediction. There a several possible approaches to setting a threshold, but the two common ones that we will look at here are the 'minimum training presence' (the largest possible threshold, and hence smallest area, that does not result in omission of any of the occurrence records) and the '10 percentile training presence' (the largest threshold that leaves out 10% of occurrence records). The Maxent software calculates these thresholds for you see the table in the html file, for example:
 
 
 
@@ -130,7 +130,7 @@ Now, it is often desirable to set a decision threshold (threshold of occurrence)
 
 
 
-We are working with Logistic model output, so we can ignore the first column. The second column gives the number we will use. The fourth column informs us the fraction of the study are that is considered ‘present’ or ‘suitable’ if we use this threshold, and the fifth column tells us the proportion of occurrence records that are omitted from the prediction (the omission rate). Of course, the omission rate must be 0.0 for the minimum training presence threshold (since the threshold is set to not allow any omission) and the omission rate must be 0.1 (or very close) for the 10 percentile threshold (since the threshold is set to give 10% omission). Note that we will look at this table in more detail in Lab 4.
+We are working with Logistic model output, so we can ignore the first column. The second column gives the number we will use. The fourth column informs us the fraction of the study are that is considered 'present' or 'suitable' if we use this threshold, and the fifth column tells us the proportion of occurrence records that are omitted from the prediction (the omission rate). Of course, the omission rate must be 0.0 for the minimum training presence threshold (since the threshold is set to not allow any omission) and the omission rate must be 0.1 (or very close) for the 10 percentile threshold (since the threshold is set to give 10% omission). Note that we will look at this table in more detail in Lab 4.
 
 
 

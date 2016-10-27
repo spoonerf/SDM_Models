@@ -1,7 +1,14 @@
 ---
 title: "Lab 2: Environmental Data"
-output: pdf_document
+author: "Tutorial by Fiona Spooner, following tutorials by Richard Pearson for courses at UCL"
+output: html_document
 ---
+
+The following video by Richard Pearson is relevant for this Lab:
+
+https://www.youtube.com/watch?v=8inEr1c2UmE&list=PLKYTvTbXFuChaoF-L-1e9RzCagdLPQcCU&index=3
+
+Additionally, a lot of the material in these practicals are adapted from Hijmans and Elith (2011) - https://cran.r-project.org/web/packages/dismo/vignettes/sdm.pdf
 
 ###Aims
 
@@ -24,12 +31,17 @@ library(mapdata)
 And to create a folder to put the environmental variables in - you will need to create the folder first before setting it as your working directory for this lab. This folder should be separate to the one you saved the species locations in.
 
 ```{r, eval=F}
-setwd("C:/Users/Fiona/Desktop/SDM_Course/BioClim_Pres") 
+setwd("C:/Users/Fiona/Desktop/SDM_Course/Env_Data") 
 
 ```
 
+###Downloading environmental data
+
 Now we can download the bioclim data directly from Worldclim. The environmental data are made up of 19 bioclimatic variables, the details of which you can read about here: http://www.worldclim.org/bioclim
 
+The getData() can download the bioclim data at a variety of resolutions.  Valid resolutions are 0.5, 2.5, 5, and 10 (minutes of a degree). In the case of res=0.5, you must also provide a lon and lat argument for a tile; for the lower resolutions global data will be downloaded.
+
+If you are a species of fairly restricted range you may be best of downloading the 0.5 resolution data but if the species is more broadly distributed it is probably best to use the 2.5 resolution.
 
 ```{r}
 
@@ -41,7 +53,11 @@ We can plot the environmental data, here are the first and twelfth layers, annua
 
 ```{r}
 
-plot(env[[1]], main="Annual Mean Temperature")
+bioclim_names<-c("Annual Mean Temp", "Mean Diurnal Range", "Isothermality", "Temp Seasonaliity", "Max Temp Warmest Month", "Min Temp Coldest Month", "Temp Annual Range", "Mean Temp Wettest Quarter","Mean Temp Driest Quarter", "Mean Temp Warmest Quarter", "Mean Temp Coldest Quarter", "Annual Precip", "Precip Wettest Month", "Precip Driest Month", "Precip Seasonality", "Precip Wettest Quarter", "Precip Driest Quarter", "Precip Warmest Quarter", "Precip Coldest Quarter")
+
+names(env)<-bioclim_names
+
+plot(env[[1]], main=names(env[[1]]))
 
 plot(env[[12]], main="Annual Precipitation")
 
