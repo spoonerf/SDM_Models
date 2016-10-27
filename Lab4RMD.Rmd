@@ -1,7 +1,11 @@
 ---
 title: 'Lab 4: SDM Evaluation and Projection'
+author: "Tutorial by Fiona Spooner, following tutorials by Richard Pearson for courses at UCL"
 output: html_document
 ---
+
+A lot of the material in these practicals are adapted from Hijmans and Elith (2011) - https://cran.r-project.org/web/packages/dismo/vignettes/sdm.pdf
+
 
 ###Aims
 

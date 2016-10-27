@@ -15,12 +15,14 @@ Additionally, a lot of the material in these practicals are adapted from Hijmans
 * To view, clip, format and export environmental resource data
 
 
-First we need to install the packages needed for this practical:
+First we need to install the packages needed for this practical. If you did Lab 1 in R you will have already installed these and won't need to again.    
 ```{r, warning=F, message=F, eval=F}
 install.packages("raster")
 install.packages("maps")
 install.packages("mapdata")
 ```
+
+Then load the libraries of these packages:
 
 ```{r, warning=F, message=F}
 library(raster)
@@ -31,25 +33,40 @@ library(mapdata)
 And to create a folder to put the environmental variables in - you will need to create the folder first before setting it as your working directory for this lab. This folder should be separate to the one you saved the species locations in.
 
 ```{r, eval=F}
-setwd("C:/Users/Fiona/Desktop/SDM_Course/Env_Data") 
+setwd("~/SDM_Course/Env_Data") 
 
 ```
 
-###Downloading environmental data
+####Downloading environmental data
 
 Now we can download the bioclim data directly from Worldclim. The environmental data are made up of 19 bioclimatic variables, the details of which you can read about here: http://www.worldclim.org/bioclim
 
-The getData() can download the bioclim data at a variety of resolutions.  Valid resolutions are 0.5, 2.5, 5, and 10 (minutes of a degree). In the case of res=0.5, you must also provide a lon and lat argument for a tile; for the lower resolutions global data will be downloaded.
+The getData() function can download the bioclim data at a variety of resolutions.  Valid resolutions are 0.5, 2.5, 5, and 10 (minutes of a degree). In the case of res=0.5, you must also provide a lon and lat argument for a tile; for the lower resolutions global data will be downloaded.
 
 If you are a species of fairly restricted range you may be best of downloading the 0.5 resolution data but if the species is more broadly distributed it is probably best to use the 2.5 resolution.
+
 
 ```{r}
 
 env = getData("worldclim", var="bio", res=2.5)
+```
+
+Once downloaded you can look at the resulting data by just running the command 'env'
+
+This will show you the RasterStack of downloaded data - this is a stack of 19 layers of raster data, one for each of the bioclim variables. You can also see some other basic information such as the spatial resolution of each cell and the extent of the rasters. As a side note rasters have to have the same extent, resolution and projection in order to be in a stack together.
+
+```{r}
+env
 
 ```
 
-We can plot the environmental data, here are the first and twelfth layers, annual mean temperature and annual precipitation, respectively.
+####Attaching names to the data and plotting it
+
+
+We can change the names of the layers in the RasterStack to make them a bit more meaningful. Here I have written out the names of the bioclim variables and then attached them to the RasterStack using the names() function.
+
+We can also plot the environmental data, If we just plot them all we get a small plot of global data of the first 16 layers. 
+
 
 ```{r}
 
@@ -57,18 +74,38 @@ bioclim_names<-c("Annual Mean Temp", "Mean Diurnal Range", "Isothermality", "Tem
 
 names(env)<-bioclim_names
 
+plot(env)
+```
+
+We can look in more detail at the rasters within the stack - here are the first and twelfth layers, annual mean temperature and annual precipitation, respectively.
+
+```{r}
+
 plot(env[[1]], main=names(env[[1]]))
 
-plot(env[[12]], main="Annual Precipitation")
+plot(env[[12]], main=names(env[12]))
 
 ```
 
+You might notice that some of the values seem a bit odd - in particular the temperature values which are a lot larger than they should be. This is to do with how the numbers are stored - it takes up less space to save an integer than a decimal so in order to maintain the accuracy of the data they are stored as values which are ten times larger than the 'real' values. We can fix this later by dividing these temperature layers by ten.
 
-The data is currently at a global level, it needs to be cropped to the area of interest so that Maxent does not try to run the model for the whole world.
+####Cropping the environmental data
 
-```{r, echo=F}
+The data is currently at a global level, it needs to be cropped to the area of interest so that Maxent does not try to run the model for the whole world as that will take a really long time.
+
+We can read back in the location data from Lab 1 and then crop the raster data to the extent of those locations.
+```{r,echo=F }
 capg<-read.csv("capra_locs.csv")
 ```
+
+```{r,eval=F }
+capg<-read.csv("~/SDM_Course/Species_locs/capra_locs.csv")
+```
+
+To do this we need to create an extent object, which is a set of coordinates in this order - minimum longitude, maximum longitude, minimum latitude and finally maximum latitude.
+
+Here we have taken the maximum and minimum values from the location points then extenced them by 1 degree so that the rasters will be cropped to an area slightly larger than the extent of the location points.
+
 
 ```{r}
 
@@ -78,38 +115,55 @@ envcrop <- crop(env,e)
 
 ```
 
-
-As you can see it is unlikely that annual mean temperature will vary from -200 - 300 degrees, the data are shown like this because the values are stored as integers (the real values multiplied by 10), so to see the 'real' values we can divide by 10.
+If we look at the cropped RasterStack by running the command 'envcrop' we should see that all of the information is still there but the extent values have changed
 
 ```{r}
-envcrop2<-envcrop/10
-
+envcrop
 ```
 
 
-Now we can plot this cropped area, with 'real' values, with the location points on top.
+Now we can plot this cropped area and add the occurrence points on top.
 
 ```{r}
 
-plot(envcrop2[[1]], main="Annual Mean Temperature")
+plot(envcrop[[1]], main="Annual Mean Temperature")
 map('worldHires',xlim=c(min(capg$lon)-1,max(capg$lon)+1), 
     ylim=c(min(capg$lat)-1,max(capg$lat)+1), fill=F, add=T)
 points(capg$lon, capg$lat, pch="+")
 
 ```
 
-Now you need to pick which of the bioclimatic variables you want to include in the Maxent model, try and pick ones which are most ecologically relevant to your species. Here I have picked the bioclimatic variables 1, 4, 11, 12, 14 and 19. They need to be exported as ascii files so that they can be used in Maxent.
+####Dividing the temperature data by 10
+
+Now we can divide the temperature layers by 10 to get the 'real' values. The temperature layers are the ones which are numbered, 1,2,5,6,7,8,9,10 and 11. To do this we unstack the RasterStack and then divide the layers individually to make sure they are still in the right order and put them back in the stack.
 
 ```{r}
-#listenv <- unstack(envcrop)
+listenv <- unstack(envcrop)
+
+listenv[[1]]<-listenv[[1]]/10
+listenv[[2]]<-listenv[[2]]/10
+listenv[[5]]<-listenv[[5]]/10
+listenv[[6]]<-listenv[[6]]/10
+listenv[[7]]<-listenv[[7]]/10
+listenv[[8]]<-listenv[[8]]/10
+listenv[[9]]<-listenv[[9]]/10
+listenv[[10]]<-listenv[[10]]/10
+listenv[[11]]<-listenv[[11]]/10
+
+envcrop2<-stack(listenv)
+
+```
+
+####Picking the bioclim layers for use in Maxent and saving them in Ascii format
+
+Now you need to pick which of the bioclimatic variables you want to include in the Maxent model, try and pick ones which are most ecologically relevant to your species. Here I have picked the bioclimatic variables 1, 4, 11, 12, 14 and 19. They need to be exported as Ascii files as this is the file type required by Maxent.
+
+```{r}
 
 writeRaster(stack(envcrop2[[c(1,4,11,12,14,19)]]), names(envcrop2[[c(1,4,11,12,14,19)]]), 
             bylayer=TRUE, format='ascii', overwrite=T)
 
 ```
 
-Now you have a folder with your environmental ascii layers in, which you can now use with your species locations to build a model in Maxent.
-
-
-
+Now you have a folder with your environmental Ascii layers in, which you can now use with your species locations to build a model in Maxent.
 
