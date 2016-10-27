@@ -1,6 +1,6 @@
 ---
 title: 'Lab 4: SDM Evaluation and Projection'
-output: pdf_document
+output: html_document
 ---
 
 ###Aims
@@ -14,11 +14,11 @@ output: pdf_document
 
 There are multiple statistics that can be used to evaluate a species distribution model. Here we will use the omission rate combined with binomial test, as well as the Area Under the Receiver Operating Characteristic Curve (AUC). Fortunately, Maxent calculates both of these statistics for us.
 
-First, we need to set the Maxent software to split the available dataset into 2 parts: one for training (calibrating) the model, and the other for testing (evaluating) the model. Launch the Maxent software and load your samples and environmental layers the same as in lab 3. Check the box to make pictures, and select an output directory. Now, open Settings and set the random test percentage to 30. This means that when the model runs it will randomly select 30% of your occurrence records and exclude them from model calibration (i.e., they will not be used to build the model). Then, once the model has been calibrated, the software will use those 30% of ‘unseen’ records to test how well the model performs.
+First, we need to set the Maxent software to split the available dataset into 2 parts: one for training (calibrating) the model, and the other for testing (evaluating) the model. Launch the Maxent software and load your samples and environmental layers the same as in lab 3. Check the box to make pictures, and select an output directory. Now, open Settings and set the random test percentage to 30. This means that when the model runs it will randomly select 30% of your occurrence records and exclude them from model calibration (i.e., they will not be used to build the model). Then, once the model has been calibrated, the software will use those 30% of unseen records to test how well the model performs.
 
 Close the Settings window and hit Run!
 
-When the model has run, open the html results file. Notice the picture of your model – it will be slightly different to in lab 3 because this time the model was run with 30% less occurrence records. The records that were excluded for model evaluation are shown as purple squares.
+When the model has run, open the html results file. Notice the picture of your model it will be slightly different to in lab 3 because this time the model was run with 30% less occurrence records. The records that were excluded for model evaluation are shown as purple squares.
 
 Take a look at the results table in the html file, which will now have two additional columns on the right-hand end compared with lab 3; for example:
 
@@ -34,7 +34,7 @@ The html file also shows your ROC curve, for example:
 
 ![title](C:\Users\Fiona\Desktop\SDM_Course\maxent_pic_lab4b.png)
 
-There are curves for your training data in red (i.e, 70% of records) and your test data in blue (30% of records). You’ll see that the software has calculated the AUC’s for each curve – it is the test data value that we are most interested in, since this provides a more independent test of the model. So, you can state in your project write up, for example: AUC based on 30% test data = 0.901.
+There are curves for your training data in red (i.e, 70% of records) and your test data in blue (30% of records). You'll see that the software has calculated the AUCs for each curve - it is the test data value that we are most interested in, since this provides a more independent test of the model. So, you can state in your project write up, for example: AUC based on 30% test data = 0.901.
 
 
 #### Part 2: Projecting the model to a different region and/or time period
@@ -42,9 +42,9 @@ There are curves for your training data in red (i.e, 70% of records) and your te
 
 Having built and evaluated the model, the final thing we want to do is see how the model predicts for a different region or under a future climate scenario.
 
-When running the model you should follow an identical process to that in lab 3 – i.e., set the random test percentage to zero (this is because you want to use all of the available records to build the best possible model, rather than keeping some data aside for model evaluation). However, this time you are also going to include a directory containing environmental layers for the region or time period that you want to project to. The directory must contain a set of environmental layers (ASCII format) that are for the same variables, with the same names, as were used to calibrate the model. For example, if you calibrated the model using layers “bio_1”, “bio_2”, and “bio_3”, then the projection directory must contain layers with exactly the same names. However, these new layers in the projection directory can be for a different region or time period. The projection layers must all have exactly the same header information as each other, but this can be different to the calibration layers.
+When running the model you should follow an identical process to that in lab 3 - i.e., set the random test percentage to zero (this is because you want to use all of the available records to build the best possible model, rather than keeping some data aside for model evaluation). However, this time you are also going to include a directory containing environmental layers for the region or time period that you want to project to. The directory must contain a set of environmental layers (ASCII format) that are for the same variables, with the same names, as were used to calibrate the model. For example, if you calibrated the model using layers 'bio_1', 'bio_2', and 'bio_3', then the projection directory must contain layers with exactly the same names. However, these new layers in the projection directory can be for a different region or time period. The projection layers must all have exactly the same header information as each other, but this can be different to the calibration layers.
 
-So, let’s go ahead and create some projection layers:
+So, let's go ahead and create some projection layers:
 
 #####Projecting to a different region
 
@@ -87,7 +87,7 @@ NAcrop2<-NAcrop/10
 ```
 
 
-Save your new ASCII grids in a new folder (for example, I named my folder “bio_Nam”). Note that you should not save any ASCII grids in the new directory other than those that you will use for the projection.
+Save your new ASCII grids in a new folder (for example, I named my folder 'bio_Nam'). Note that you should not save any ASCII grids in the new directory other than those that you will use for the projection.
 
 ```{r}
 setwd("C:/Users/Fiona/Desktop/SDM_Course/BioClim_Nam")
@@ -104,7 +104,7 @@ Skip the next stage and put these North American environmental data into Maxent.
 #####Projecting into the future
 
 
-Here you can use a future climate scenario for the 2050s. Future scenarios can be downloaded from the WorldClim website (or an older version can be obtained directly from Richard Pearson). There are numerous emissions scenarios (RCPs) and GCMs to choose from – it is usually advisable to select just two scenarios (e.g., one ‘high’ and one ‘low’) and one or two GCMs. The 19 bioclimate variables are the same as we’ve used previously. You should follow the same steps that you undertook in Lab 2. The only difference is that this time the data you are extracting is for a future climate scenario. You might want to select a larger spatial extent this time (e.g., for my example I used the whole of North America rather than just the east) because you would expect the distribution of suitable climate to move in the future (most likely, away from the equator). Save your new ASCII grids in a new folder (for example, I named my folder “bio_NAmer_2050”). 
+Here you can use a future climate scenario for the 2050s. Future scenarios can be downloaded from the WorldClim website (or an older version can be obtained directly from Richard Pearson). There are numerous emissions scenarios (RCPs) and GCMs to choose from - it is usually advisable to select just two scenarios (e.g., one 'high' and one 'low') and one or two GCMs. The 19 bioclimate variables are the same as we've used previously. You should follow the same steps that you undertook in Lab 2. The only difference is that this time the data you are extracting is for a future climate scenario. You might want to select a larger spatial extent this time (e.g., for my example I used the whole of North America rather than just the east) because you would expect the distribution of suitable climate to move in the future (most likely, away from the equator). Save your new ASCII grids in a new folder (for example, I named my folder 'bio_NAmer_2050'). 
 
 Information about climate projections can be found here:  http://worldclim.org/cmip5_2.5m
 
@@ -158,7 +158,7 @@ writeRaster(stack(env50crop2[[c(1,4,11,12,14,19)]]), names(env50crop2[[c(1,4,11,
 
 ###Back into Maxent
 
-To project to the new layers, simply navigate to the directory that contains the ASCII grids in the box “Projection layers directory/file”. Your interface will now look something like this:
+To project to the new layers, simply navigate to the directory that contains the ASCII grids in the box 'Projection layers directory/file'. Your interface will now look something like this:
 
 
 ![title](C:\Users\Fiona\Desktop\SDM_Course\future.png)
