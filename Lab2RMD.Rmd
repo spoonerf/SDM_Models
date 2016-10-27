@@ -160,7 +160,9 @@ Now you need to pick which of the bioclimatic variables you want to include in t
 
 ```{r}
 
-writeRaster(stack(envcrop2[[c(1,4,11,12,14,19)]]), names(envcrop2[[c(1,4,11,12,14,19)]]), 
+layers<-c(1,4,11,12,14,19)
+
+writeRaster(stack(envcrop2[[layers]]), paste("bio",layers,sep=""), 
             bylayer=TRUE, format='ascii', overwrite=T)
 
 ```
