@@ -1,8 +1,8 @@
 ---
 title: 'Lab 3: Running Maxent SDM'
-output: word_document
+output: html_document
 ---
-```{r, echo=F}
+```{r, echo=F,eval=F}
 setwd("C:/Users/Fiona/Desktop/SDM_Course")
 
 ```
@@ -102,6 +102,8 @@ install.packages("maps")
 install.packages("maptools")
 install.packages("ggplot2")
 ```
+
+
 ```{r, warning=FALSE, message=FALSE}
 library(rasterVis)
 library(maps)
