@@ -1,6 +1,5 @@
 ---
 title: 'Lab 3: Running Maxent SDM'
-<<<<<<< HEAD
 author: "Tutorial by Fiona Spooner, following tutorials by Richard Pearson for courses at UCL"
 output: html_document
 ---
@@ -65,7 +64,7 @@ Select your own Output directory.
 
 For our purposes, we will use the logistic output format in Maxent (check the dropdown menu under 'output format' is set to logistic) and we will 'make pictures of predictions' (ensure the box is checked). Other parts of the interface can be left as default. Now, your interface should look similar to this:
 
-![title](C:\Users\Fiona\Desktop\SDM_Course\maxent_pic.png)
+![](C:\Users\Fiona\Documents\PhD\SDM_Models\maxent_pic.png)
 
 
 
@@ -82,7 +81,7 @@ The species occurrence localities that you used to build the model are shown as 
 Here is the Maxent model for the Alpine ibex, which I have used as an example:
 
 
-![title](C:\Users\Fiona\Desktop\SDM_Course\Capra_ibex.png)
+![](C:\Users\Fiona\Documents\PhD\SDM_Models\Capra_ibex.png)
 
 
 
@@ -123,7 +122,7 @@ capg<-read.csv("capra_locs.csv")
 
 Next let's input this file back into R as a raster and have a look at it.
 ```{r}
-capout<-raster("C:/Users/Fiona/Desktop/SDM_Course/MaxentOutput/Capra_ibex.asc")
+capout<-raster("Capra_ibex.asc")
 plot(capout)
 points(capg$lon, capg$lat, pch="+")
 ```
@@ -133,7 +132,7 @@ Now, it is often desirable to set a decision threshold (threshold of occurrence)
 
 
 
-![title](C:\Users\Fiona\Desktop\SDM_Course\threshold.png)
+![](C:\Users\Fiona\Documents\PhD\SDM_Models\threshold.png)
 
 
 
@@ -168,7 +167,7 @@ Let's try the 10 percentile training presence threshold to see what difference t
 n <- c(0,0.262,0,0.262,1,1)
 rclmat2 <- matrix(n, ncol=3, byrow=TRUE)
 
-rclmat2 #the reclassifying matrix
+rclmat2 
 
 rc2 <- reclassify(capout, rclmat2)
 ```
