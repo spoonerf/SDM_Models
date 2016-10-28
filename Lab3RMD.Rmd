@@ -50,7 +50,6 @@ There's no need for our purposes to download the example datasets available on t
 
 
 
-
 To perform a model run, you need to supply a file containing species occurrence localities ('samples'), a directory containing environmental variables, and an output directory. You can use the species occurrence localities that you obtained in Lab 1. 
 
 
@@ -98,23 +97,25 @@ The picture in the html file is for quick viewing, but it is useful to import th
 
 
 
-First of all let's install the packages needed for this section.
+First of all let's install the packages needed for this section, you don't need to install them again if you have already done so for a previous lab.
 
 ```{r, eval=FALSE, message=F}
-install.packages("rasterVis")
+install.packages("raster")
 install.packages("maps")
 install.packages("maptools")
 install.packages("ggplot2")
 ```
 
+And load them in using the library function:
 
 ```{r, warning=FALSE, message=FALSE}
-library(rasterVis)
+library(raster)
 library(maps)
 library(mapdata)
 library(ggplot2)
 ```
 
+Let's load back in the species location data so we can plot it on top of the model results.
 ```{r, echo=F}
 capg<-read.csv("capra_locs.csv")
 ```
@@ -140,15 +141,16 @@ We are working with Logistic model output, so we can ignore the first column. Th
 
 
 
-For now, we can use the thresholds from this table (e.g., 0.011, 0.262) to redraw our map as a binary prediction. To do this we need to create a matrix to set the thresholds for the areas which are considered 'suitable' or 'unsuitable'. The first column in the matrix created below represents the 'from' values and the second column represents the 'to' values and the third column sets what those values should be set to. So here we are setting anything 0-0.011 to 0 and anything 0.011-1 as 1.
+For now, we can use the thresholds from this table (e.g., 0.011, 0.262) to redraw our map as a binary prediction. To do this we need to create a matrix to set the thresholds for the areas which are considered 'suitable' or 'unsuitable'. The first column in the matrix created below represents the 'from' values and the second column represents the 'to' values and the third column sets what those values should be set to. So here we are setting anything 0-0.011 to 0 and anything 0.011-1 as 1. Note that these values will probably be different for you and will depend on the threshold values that your model suggests.
 
 
+We then use the reclassify function to reclassify the values in the model output as either 0 (species absent) or 1 (species present). We can plot out the resulting map of predicted presence and absence.
 
 ```{r}
 m <- c(0,0.011,0,0.011,1,1)
 rclmat <- matrix(m, ncol=3, byrow=TRUE)
 
-rclmat #the reclassifying matrix
+rclmat 
 
 rc <- reclassify(capout, rclmat)
 
@@ -158,6 +160,8 @@ map('worldHires',xlim=c(min(capg$lon)-1,max(capg$lon)+1),
 points(capg$lon, capg$lat, pch="+")
 
 ```
+
+Does this map look sensible to you? If the distribution is larger than you expected you might need to increase the threshold values.
 
 
 Let's try the 10 percentile training presence threshold to see what difference that makes.
@@ -178,17 +182,102 @@ plot(rc2)
 map('worldHires',xlim=c(min(capg$lon)-1,max(capg$lon)+1), 
     ylim=c(min(capg$lat)-1,max(capg$lat)+1), fill=F, add=T)
 points(capg$lon, capg$lat, pch="+")
+```
+
+Does this one look more realistic? Or does it look smaller than you might expect? If both the values look unrealistic you might want to pick a number in between.
 
 
-###There are lots of different ways to plot things in R - the package ggplot2 has vast capabilities
+There are lots of different ways to plot things in R - the package ggplot2 has vast capabilities but first of all we need to download some data.
 
-p<-gplot(rc2) +geom_raster(aes(fill = factor(value))) +coord_equal()
-p+ scale_fill_manual(values=c('light grey','dark green'),name="Predicted Suitability",
-   breaks=c("0", "1"), labels=c("Unsuitable", "Suitable")) + xlab("Longitude") +ylab("Latitude")+ggtitle("Predicted Suitable Habitat for Alpine Ibex") +guides(fill=guide_legend(title=NULL))
+Go to http://www.naturalearthdata.com/downloads/
 
+The scale of your study will influence what data you download. If your species is very broadly distributed - across 2+ continents then you will need to download large scale data. If your study covers multiple countries then download medium scale data, if it is restricted to a smaller area then download the small scale data. I have chosen the small scale data as my study covers a fairly restricted area.
+
+You will need to download the Cultural -> Admin 0 – Countries data and also Physical -> Land data
+
+```{r}
+
+library(rgdal)
+world<-readOGR(dsn="C:/Users/Fiona/Documents/GIS/ne_10m_land", layer="ne_10m_land")
+world_laea<-spTransform(world, CRS("+proj=laea"))
+world_laea_df<-fortify(world_laea)
+
+countries<-readOGR(dsn="C:/Users/Fiona/Documents/GIS/ne_10m_admin_0_countries", layer="ne_10m_admin_0_countries")
+countries_laea<-spTransform(countries, CRS("+proj=laea"))
+countries_laea_df<-fortify(countries_laea)
+
+coordinates(capg)<-c("lon","lat")
+proj4string(capg) <- CRS("+proj=longlat")
+capg_laea<-spTransform(capg, CRS("+proj=laea"))
+capg_laea_df<-data.frame(capg_laea)
 ```
 
 
-Experiment with different ways of mapping the resulting data, above are just two examples.
+
+
+```{r}
+proj4string(rc2) <- CRS("+proj=longlat")
+rc_laea <- projectRaster(rc2, crs = "+proj=laea", method = "ngb" )   #method has to be nearest neighbour so that values aren't changed and interpolated
+
+proj4string(capout) <- CRS("+proj=longlat")
+capout_laea <- projectRaster(capout, crs = "+proj=laea", method = "ngb" )
+
+rcp<-rasterToPoints(rc_laea)
+rcpdf <- data.frame(rcp)
+#Make appropriate column headings
+colnames(rcpdf) <- c("Longitude", "Latitude", "Capra")
+
+capout2<-rasterToPoints(capout_laea)
+capout_df <- data.frame(capout2)
+colnames(capout_df) <- c("Longitude", "Latitude", "Capra")
+
+xmin<-min(capg_laea_df$lon)
+xmax<-max(capg_laea_df$lon)
+ymin<-min(capg_laea_df$lat)
+ymax<-max(capg_laea_df$lat)
+buff<-350000
+```
+
+
+
+```{r}
+theme_opts<-list(theme(panel.grid.minor = element_blank(),
+                       panel.grid.major = element_blank(),
+                       panel.background = element_rect(fill = 'white', colour = NA),
+                       plot.background = element_rect(),
+                       axis.line = element_blank(),
+                       axis.text.x = element_blank(),
+                       axis.text.y = element_blank(),
+                       axis.ticks = element_blank(),
+                       axis.title.x = element_blank(),
+                       axis.title.y = element_blank(),
+                       plot.title = element_text()))
+
+
+ggplot(data=capout_df, aes(y=Latitude, x=Longitude)) +
+  geom_polygon(data=world_laea_df, aes(long,lat,group=group), fill="light grey")+
+  geom_raster(aes(fill=Capra))+
+  scale_fill_gradientn(colours=c("light grey","dark orange"))+
+  geom_path(data=countries_laea_df, aes(long,lat, group=group),color="black",size=0.1) +
+  geom_point(data=capg_laea_df, aes(lon, lat, group=NULL,fill=NULL ),size=1, shape=16 ) +
+ coord_cartesian(xlim = c((xmin-buff),(xmax+buff)), ylim = c((ymin-buff),(ymax+buff)))+
+  theme_opts
+```
+
+
+```{r}
+ggplot(data=rcpdf, aes(y=Latitude, x=Longitude)) +
+  geom_polygon(data=world_laea_df, aes(long,lat,group=group), fill="light grey")+
+  geom_raster(aes(fill=Capra))+
+ scale_fill_gradientn(colours=c("light grey","dark orange"))+
+  geom_path(data=countries_laea_df, aes(long,lat, group=group),color="black",size=0.1) +
+  geom_point(data=capg_laea_df, aes(lon, lat, group=NULL,fill=NULL ),size=1, shape=16 ) +
+ coord_cartesian(xlim = c((xmin-buff),(xmax+buff)), ylim = c((ymin-buff),(ymax+buff)))+
+  theme(legend.position = "none")+
+  theme_opts
+
+```
+
+Experiment with different ways of mapping the resulting data.
 
 
