@@ -195,6 +195,14 @@ The scale of your study will influence what data you download. If your species i
 
 You will need to download the Cultural -> Admin 0 – Countries data and also Physical -> Land data
 
+You can use the readOGR() function to load these shapefiles into R. After "dsn=" you need to put the file path to the folder containing the .shp file and then after "layer=" you need to put the name of the shape file (.shp) but not including the .shp suffix.
+
+As I am focussing on an area in Europe I am going to reproject the maps from their default WGS84 projection to a Europe specific projection called LAEA. You can find all sorts of projections on http://spatialreference.org/ along with the codes required to project in them in R using the spTransform() function 
+
+If you aren't sure if you need to reproject your data just leave it in the default projection and skip the spTransform step.
+
+The fortify function changes shapefiles to dataframes, this is the format that ggplot requires. 
+
 ```{r}
 
 library(rgdal)
@@ -206,6 +214,11 @@ countries<-readOGR(dsn="C:/Users/Fiona/Documents/GIS/ne_10m_admin_0_countries", 
 countries_laea<-spTransform(countries, CRS("+proj=laea"))
 countries_laea_df<-fortify(countries_laea)
 
+```
+
+We also need to reproject the species occurrence data so that we can plot it on top of our model output data. There is a similar process here but instead of the fortify function, the data.frame function is used.
+
+```{r}
 coordinates(capg)<-c("lon","lat")
 proj4string(capg) <- CRS("+proj=longlat")
 capg_laea<-spTransform(capg, CRS("+proj=laea"))
@@ -213,11 +226,13 @@ capg_laea_df<-data.frame(capg_laea)
 ```
 
 
+Now we need to do a similar reprojection for the model output, here we do it for both the raw model output and the reclassified data. However there is an extra step before reprojecting, we need to define the projection as it doesn't have a default projection associated with, then we can reproject it.  
 
+Once again we have to turn these objects into dataframes, this time we us the rasterToPoints function followed by the data.frame function.
 
 ```{r}
 proj4string(rc2) <- CRS("+proj=longlat")
-rc_laea <- projectRaster(rc2, crs = "+proj=laea", method = "ngb" )   #method has to be nearest neighbour so that values aren't changed and interpolated
+rc_laea <- projectRaster(rc2, crs = "+proj=laea", method = "ngb" )  
 
 proj4string(capout) <- CRS("+proj=longlat")
 capout_laea <- projectRaster(capout, crs = "+proj=laea", method = "ngb" )
@@ -230,7 +245,11 @@ colnames(rcpdf) <- c("Longitude", "Latitude", "Capra")
 capout2<-rasterToPoints(capout_laea)
 capout_df <- data.frame(capout2)
 colnames(capout_df) <- c("Longitude", "Latitude", "Capra")
+```
 
+Here we get the values for the extent of our map and a set a value for a buffer around these points, so that our species locations arent right at the edge of the map. 
+
+```{r}
 xmin<-min(capg_laea_df$lon)
 xmax<-max(capg_laea_df$lon)
 ymin<-min(capg_laea_df$lat)
