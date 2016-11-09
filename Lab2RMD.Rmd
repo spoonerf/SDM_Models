@@ -135,22 +135,18 @@ points(capg$lon, capg$lat, pch="+")
 
 ####Dividing the temperature data by 10
 
-Now we can divide the temperature layers by 10 to get the 'real' values. The temperature layers are the ones which are numbered, 1,2,5,6,7,8,9,10 and 11. To do this we unstack the RasterStack and then divide the layers individually to make sure they are still in the right order and put them back in the stack.
+Now we can divide the temperature layers by 10 to get the 'real' values. The temperature layers are the ones which are numbered, 1,2,5,6,7,8,9,10 and 11. To do this we create a vector called 'ten_div', selecting the temperature layers, then write a 'for loop' which is essentially saying for each of 'layer' in 'ten_div' take that layer and divide it by ten and then put it back in the stack in the same location or layer it came from. 
+
 
 ```{r}
-listenv <- unstack(envcrop)
+ten_div<-c(1,2,5,6,7,8,9,10,11)  #the layers we want to divide by ten
 
-listenv[[1]]<-listenv[[1]]/10
-listenv[[2]]<-listenv[[2]]/10
-listenv[[5]]<-listenv[[5]]/10
-listenv[[6]]<-listenv[[6]]/10
-listenv[[7]]<-listenv[[7]]/10
-listenv[[8]]<-listenv[[8]]/10
-listenv[[9]]<-listenv[[9]]/10
-listenv[[10]]<-listenv[[10]]/10
-listenv[[11]]<-listenv[[11]]/10
+for (layer in ten_div){
+  
+  envcrop[[layer]]<-envcrop[[layer]]/10
 
-envcrop2<-stack(listenv)
+  }
+
 
 ```
 
@@ -162,7 +158,7 @@ Now you need to pick which of the bioclimatic variables you want to include in t
 
 layers<-c(1,4,11,12,14,19)
 
-writeRaster(stack(envcrop2[[layers]]), paste("bio",layers,sep=""), 
+writeRaster(stack(envcrop[[layers]]), paste("bio",layers,sep=""), 
             bylayer=TRUE, format='ascii', overwrite=T)
 
 ```

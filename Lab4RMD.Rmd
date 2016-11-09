@@ -27,7 +27,7 @@ When the model has run, open the html results file. Notice the picture of your m
 Take a look at the results table in the html file, which will now have two additional columns on the right-hand end compared with lab 3; for example:
 
 
-![title](C:\Users\Fiona\Desktop\SDM_Course\maxent_pic_lab4.png)
+![](C:\Users\Fiona\Desktop\SDM_Course\maxent_pic_lab4.png)
 
 
 These new columns present evaluation results at different thresholds. Remember we are interested in the minimum training presence, and the 10 percentile training presence. The test omission rate is the fraction of test points (i.e., the 30% of points that you randomly selected) that are omitted from the prediction. The P-value is from the binomial test.
@@ -36,7 +36,7 @@ So, from these results we could state that: based on 30% test data and a minimum
 
 The html file also shows your ROC curve, for example:
 
-![title](C:\Users\Fiona\Desktop\SDM_Course\maxent_pic_lab4b.png)
+![](C:\Users\Fiona\Desktop\SDM_Course\maxent_pic_lab4b.png)
 
 There are curves for your training data in red (i.e, 70% of records) and your test data in blue (30% of records). You'll see that the software has calculated the AUCs for each curve - it is the test data value that we are most interested in, since this provides a more independent test of the model. So, you can state in your project write up, for example: AUC based on 30% test data = 0.901.
 
@@ -93,9 +93,12 @@ NAcrop2<-NAcrop/10
 
 Save your new ASCII grids in a new folder (for example, I named my folder 'bio_Nam'). Note that you should not save any ASCII grids in the new directory other than those that you will use for the projection.
 
-```{r}
+```{r, eval=F}
 setwd("C:/Users/Fiona/Desktop/SDM_Course/BioClim_Nam")
 
+```
+
+```{r}
 writeRaster(stack(NAcrop2[[c(1,4,11,12,14,19)]]), names(NAcrop2[[c(1,4,11,12,14,19)]]), 
             bylayer=TRUE, format='ascii', overwrite=T)
 
@@ -114,17 +117,24 @@ Information about climate projections can be found here:  http://worldclim.org/c
 
 and how to download them, here: http://www.inside-r.org/packages/cran/raster/docs/getData
 
-```{r}
+```{r, eval=F}
 setwd("C:/Users/Fiona/Desktop/SDM_Course/bio_NAmer_2050")
+```
 
+```{r}
 env_2050 = getData('CMIP5', var="bio", res=2.5, model="HE", year=50, rcp=85)
 
 ```
 
 As before the data needs to be cropped to the same area as the original model
 
-```{r, echo=F}
-capg<-read.csv("C:/Users/Fiona/Desktop/SDM_Course/Species_locs/capra_locs.csv")
+```{r, echo=FALSE}
+capg<-read.csv("capra_locs.csv")
+```
+
+```{r, eval=FALSE}
+capg<-read.csv("Your_Species_Occurence_Data_From_Lab_1.csv")
+
 ```
 
 ```{r}
@@ -138,13 +148,20 @@ env50crop <- crop(env_2050,e)
 Again we must be consistent and divide the values by 10
 
 ```{r}
-env50crop2<-env50crop/10
+ten_div<-c(1,2,5,6,7,8,9,10,11)  #the layers we want to divide by ten
+
+for (layer in ten_div){
+  
+  env50crop[[layer]]<-env50crop[[layer]]/10
+
+  }
+
 
 ```
 
 We need to make sure the future projection layers have the same name as the present layers - so that Maxent can recognise them
 ```{r}
-names(env50crop2) <-c("bio1","bio2","bio3","bio4","bio5","bio6","bio7","bio8",
+names(env50crop) <-c("bio1","bio2","bio3","bio4","bio5","bio6","bio7","bio8",
                       "bio9","bio10","bio11","bio12","bio13","bio14","bio15",
                       "bio16","bio17","bio18","bio19")
 
@@ -154,7 +171,7 @@ Note that you should not save any ASCII grids in the new directory other than th
 
 ```{r}
 
-writeRaster(stack(env50crop2[[c(1,4,11,12,14,19)]]), names(env50crop2[[c(1,4,11,12,14,19)]]), 
+writeRaster(stack(env50crop[[c(1,4,11,12,14,19)]]), names(env50crop[[c(1,4,11,12,14,19)]]), 
             bylayer=TRUE, format='ascii', overwrite=T)
 
 ```
@@ -165,7 +182,7 @@ writeRaster(stack(env50crop2[[c(1,4,11,12,14,19)]]), names(env50crop2[[c(1,4,11,
 To project to the new layers, simply navigate to the directory that contains the ASCII grids in the box 'Projection layers directory/file'. Your interface will now look something like this:
 
 
-![title](C:\Users\Fiona\Desktop\SDM_Course\future.png)
+![](C:\Users\Fiona\Desktop\SDM_Course\future.png)
 
 
 It is also a good idea to set up a new output folder for your new results.
