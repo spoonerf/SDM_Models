@@ -104,6 +104,7 @@ install.packages("raster")
 install.packages("maps")
 install.packages("maptools")
 install.packages("ggplot2")
+install.packages("scales")
 ```
 
 And load them in using the library function:
@@ -113,6 +114,7 @@ library(raster)
 library(maps)
 library(mapdata)
 library(ggplot2)
+library(scales)
 ```
 
 Let's load back in the species location data so we can plot it on top of the model results.
