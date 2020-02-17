@@ -125,25 +125,32 @@ head(capra)
 
 The key information we need from these data are the latitude and longitude, some of the downloaded points will be missing this information, so we can remove those.
 
-Here we use a combination of the subset() command which you can use to subset your data based on any definable characteristics and the is.na() command which will return a TRUE if the argument enter is NA and FALSE if it is not. 
+Here we use the dplyr package which is really good for handling data. The [dplyr](https://dplyr.tidyverse.org/) package uses pipes (%>%) to link functions together. For example in the code below we start with the 'capra' dataframe and then use the [select()](https://dplyr.tidyverse.org/reference/select.html) function to select out which columns we are interested in. Then we pipe these columns into the [filter()](https://dplyr.tidyverse.org/reference/filter.html) function wrapped around the complete.cases() function, this filters out rows which have an NA in any of the selected columns. Lastly we pipe this into the [distinct()](https://dplyr.tidyverse.org/reference/distinct.html) function which removes any duplicate rows from the dataframe.
 
+In the case of the Alpine ibex this removes a large amount of the data and we are left with about 1,800 records. 
 
-
-So, in this line of code we are subsetting our data to those values where both the longitude (lon) AND latitude (lat) are not NA values and therefore we have a location point for that row of data.
-
-
-####Removing data with no coordinates
+####Cleaning the occurrence data
 
 ```{r}
 
 capgeo <- capra %>% 
-  select(lat, lon, species) %>% 
+  select(species, lat, lon) %>% 
   filter(complete.cases(.)) %>% 
   distinct()
   
-capgeo <- subset(capra, !is.na(lon) & !is.na(lat)) 
-
 nrow(capgeo)
+```
+
+We can also use the [CoordinateCleaner](https://cran.r-project.org/web/packages/CoordinateCleaner/index.html) package to automatically clean the coordinates. This runs through a series of rules and flags whether each coordinate breaks any of the rules. We can filter out rows in which the coordinates break any of the rules using the code below. 
+
+```{r}
+clean_cap <- clean_coordinates(capgeo, lat = "lat", lon = "lon", species = "species")
+
+head(clean_cap)
+
+clean_cap <- clean_cap %>% 
+  filter(.summary == TRUE)
+
 ```
 
 
