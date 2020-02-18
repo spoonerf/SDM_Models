@@ -132,11 +132,17 @@ In the case of the Alpine ibex this removes a large amount of the data and we ar
 ####Cleaning the occurrence data
 
 ```{r}
+xmin <- 6
+xmax <- 14.5
+ymin <- 43 
+ymax <- 49
 
 capgeo <- capra %>% 
   select(species, lat, lon) %>% 
   filter(complete.cases(.)) %>% 
+  filter(lon > xmin & lon < xmax & lat > ymin & lat < ymax) %>% 
   distinct()
+  
   
 nrow(capgeo)
 ```
@@ -192,14 +198,6 @@ We need to remove the duplicates, firstly we can do this by identifying them usi
 
 
 ####Cleaning the data
-
-
-```{r}
-dups <- duplicated(capgeo[, c("lon", "lat")])
-sum(dups) 
-capg <-capgeo[!dups, ]
-nrow(capg)
-```
 
 
 For this species I know that all of the latitude and longitude values should be positive, because I expect it to be only found in the northern and eastern hemispeheres.This means we can change any potentially erroneous negative values to be positive. This may not be the case for your species so think carefully about this before doing it.
