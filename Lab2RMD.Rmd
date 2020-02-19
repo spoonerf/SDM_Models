@@ -2,8 +2,8 @@
 title: "Lab 2: Environmental Data"
 author: 'Tutorial by [Fiona Spooner](https://github.com/spoonerf), following tutorials by Richard Pearson for [courses at UCL](https://www.ucl.ac.uk/lifesciences-faculty-php/courses/viewcourse.php?coursecode=BIOL0032)'
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output:
-  prettydoc::html_pretty:
+output: 
+    prettydoc::html_pretty:
     theme: leonids
     highlight: github
 geometry: margin=3cm
@@ -197,9 +197,9 @@ for (layer in ten_div) {
 
 ```
 
-#### Saving selected bioclim layers in Ascii format
+#### Saving selected bioclim layers in ASCII format
  
-Now you need to pick which of the bioclimatic variables you want to include in the Maxent model, try and pick ones which are most ecologically relevant to your species. Here I have picked the bioclimatic variables 1, 4, 11, 12, 14 and 19. They need to be exported as Ascii files as this is the file type required by Maxent.
+Now you need to pick which of the bioclimatic variables you want to include in the Maxent model, try and pick ones which are most ecologically relevant to your species. Here I have picked the bioclimatic variables 1, 4, 11, 12, 14 and 19. They need to be exported as ASCII files as this is the file type required by Maxent.
 
 ```{r}
 
@@ -215,5 +215,5 @@ writeRaster(
 
 ```
 
-Now you have a folder with your environmental Ascii layers in, which you can now use with your species locations to build a model in Maxent.
+Now you have a folder with your environmental ASCII layers in, which you can now use with your species locations to build a model in Maxent.
 

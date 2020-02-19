@@ -2,7 +2,7 @@
 title: 'Lab 3: Running a species distribution model in Maxent'
 author: 'Tutorial by [Fiona Spooner](https://github.com/spoonerf), following tutorials by Richard Pearson for [courses at UCL](https://www.ucl.ac.uk/lifesciences-faculty-php/courses/viewcourse.php?coursecode=BIOL0032)'
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output:
+output: 
   prettydoc::html_pretty:
     theme: leonids
     highlight: github
@@ -61,7 +61,7 @@ To perform a model run, you need to supply a file containing species occurrence 
 Next, in Maxent, use the browse button under 'Samples' to locate your .csv file.
 
 
-For your environmental layers, use the bioclim layers that you clipped to the appropriate region and converted to ascii grids in Lab 2. You could also include other environmental variables, for example from remote sensing. All layers should be in ascii grid format and all must have exactly the same header information. Use the Browse button under 'Environmental layers' to locate your ascii grids, but note that while browsing for the environmental variables you are looking for the directory that contains them (you don't need to browse down to the files in the directory).
+For your environmental layers, use the bioclim layers that you clipped to the appropriate region and converted to ASCII grids in Lab 2. You could also include other environmental variables, for example from remote sensing. All layers should be in ASCII grid format and all must have exactly the same header information. Use the Browse button under 'Environmental layers' to locate your ASCII grids, but note that while browsing for the environmental variables you are looking for the directory that contains them (you don't need to browse down to the files in the directory).
 
 
 Select your own Output directory, e.g. "~/SDM_Course/Output"

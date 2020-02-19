@@ -2,7 +2,7 @@
 title: 'Lab 4: SDM Evaluation and Projection'
 author: 'Tutorial by [Fiona Spooner](https://github.com/spoonerf), following tutorials by Richard Pearson for [courses at UCL](https://www.ucl.ac.uk/lifesciences-faculty-php/courses/viewcourse.php?coursecode=BIOL0032)'
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output:
+output: 
   prettydoc::html_pretty:
     theme: leonids
     highlight: github
@@ -12,7 +12,7 @@ geometry: margin=3cm
 A lot of the material in these practicals are adapted from Hijmans and Elith (2011) - https://cran.r-project.org/web/packages/dismo/vignettes/sdm.pdf
 
 
-###Aims
+### Aims
 
 * To statistically evaluate the predictive performance of a species distribution model
 
@@ -57,9 +57,6 @@ So, let's go ahead and create some projection layers:
 
 ##### Projecting to a different region
 
-```{r, eval=F, echo = FALSE}
-install.packages("raster")
-```
 
 ```{r, warning=F, message=F}
 library(raster)
@@ -69,7 +66,8 @@ Follow the same steps that you undertook in Lab 2, but this time extract data fo
 
 ```{r}
 
-env = getData("worldclim", var="bio", res=2.5)
+
+env = getData("worldclim", var = "bio", res = 2.5)
 
 plot(env[[1]])
 ```
@@ -81,32 +79,37 @@ e                   #this will show you the values
 ```
 
 ```{r, echo=F}
-e<-extent(-162.1427,-61.98996,27.26639,74.05573)
+e <- extent(-162.1427,-61.98996,27.26639,74.05573)
 
 ```
 
 ```{r}
-NAcrop<- crop(env,e)
+NAcrop <- crop(env,e)
 ```
 
 Remember we still need to divide the raster values by 10,as before.
 ```{r}
 
-NAcrop2<-NAcrop/10
+NAcrop2 <- NAcrop/10
 ```
 
 
-Save your new ASCII grids in a new folder (for example, I named my folder 'bio_Nam'). Note that you should not save any ASCII grids in the new directory other than those that you will use for the projection.
+Save your new ASCII grids in a new folder (for example, I named my folder 'bio_Nam'). Note that you should not save any ASCII files in the new directory other than those that you will use for the projection. It is important the filenames for the equivalent bioclim ASCII files are the same (e.g. "bio1"), but are in different folders. 
 
 ```{r, eval=F}
+
 setwd("C:/Users/Fiona/Desktop/SDM_Course/BioClim_Nam")
 
 ```
 
 ```{r}
-writeRaster(stack(NAcrop2[[c(1,4,11,12,14,19)]]), names(NAcrop2[[c(1,4,11,12,14,19)]]), 
-            bylayer=TRUE, format='ascii', overwrite=T)
-
+writeRaster(
+  stack(NAcrop2[[c(1, 4, 11, 12, 14, 19)]]),
+  names(NAcrop2[[c(1, 4, 11, 12, 14, 19)]]),
+  bylayer = TRUE,
+  format = 'ascii',
+  overwrite = T
+)
 
 ```
 
@@ -127,48 +130,48 @@ setwd("C:/Users/Fiona/Desktop/SDM_Course/bio_NAmer_2050")
 ```
 
 ```{r}
-env_2050 = getData('CMIP5', var="bio", res=2.5, model="HE", year=50, rcp=85)
+env_2050 <- getData('CMIP5', var="bio", res=2.5, model="HE", year=50, rcp=85)
 
 ```
 
 As before the data needs to be cropped to the same area as the original model
 
-```{r, echo=FALSE}
-capg<-read.csv("capra_locs.csv")
+```{r}
+capg <- read.csv("capra_locs.csv")
 ```
 
-```{r, eval=FALSE}
-capg<-read.csv("Your_Species_Occurence_Data_From_Lab_1.csv")
-
-```
 
 ```{r}
+capout <- raster("Capra_ibex.asc") #reading in the original model
 
-e<-extent(min(capg$lon)-1,max(capg$lon)+1,min(capg$lat)-1,max(capg$lat)+1)    
+xmin <- extent(capout)[1]
+xmax <- extent(capout)[2]
+ymin <- extent(capout)[3]
+ymax <- extent(capout)[4]
+
+
+e <- extent(xmin, xmax, ymin, ymax)
 #should be in the order xmin,xmax,ymin,ymax
-env50crop <- crop(env_2050,e)
+env50crop <- crop(env_2050, e)
 
 ```
 
 Again we must be consistent and divide the values by 10
 
 ```{r}
-ten_div<-c(1,2,5,6,7,8,9,10,11)  #the layers we want to divide by ten
+ten_div <- c(1, 2, 5, 6, 7, 8, 9, 10, 11)  #the layers we want to divide by ten
 
-for (layer in ten_div){
+for (layer in ten_div) {
+  env50crop[[layer]] <- env50crop[[layer]] / 10
   
-  env50crop[[layer]]<-env50crop[[layer]]/10
-
-  }
+}
 
 
 ```
 
 We need to make sure the future projection layers have the same name as the present layers - so that Maxent can recognise them
 ```{r}
-names(env50crop) <-c("bio1","bio2","bio3","bio4","bio5","bio6","bio7","bio8",
-                      "bio9","bio10","bio11","bio12","bio13","bio14","bio15",
-                      "bio16","bio17","bio18","bio19")
+names(env50crop) <- paste0("bio", 1:19)
 
 ```
 
@@ -176,8 +179,14 @@ Note that you should not save any ASCII grids in the new directory other than th
 
 ```{r}
 
-writeRaster(stack(env50crop[[c(1,4,11,12,14,19)]]), names(env50crop[[c(1,4,11,12,14,19)]]), 
-            bylayer=TRUE, format='ascii', overwrite=T)
+
+writeRaster(
+  stack(env50crop[[c(1, 4, 11, 12, 14, 19)]]),
+  names(env50crop[[c(1, 4, 11, 12, 14, 19)]]),
+  bylayer = TRUE,
+  format = 'ascii',
+  overwrite = T
+)
 
 ```
 
