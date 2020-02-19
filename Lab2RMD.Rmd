@@ -1,7 +1,11 @@
 ---
 title: "Lab 2: Environmental Data"
-author: "Tutorial by Fiona Spooner, following tutorials by Richard Pearson for courses at UCL"
-output: html_document
+author: 'Tutorial by [Fiona Spooner](https://github.com/spoonerf), following tutorials by Richard Pearson for [courses at UCL](https://www.ucl.ac.uk/lifesciences-faculty-php/courses/viewcourse.php?coursecode=BIOL0032)'
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
+geometry: margin=3cm
 ---
 
 The following video by Richard Pearson is relevant for this Lab:
@@ -10,12 +14,13 @@ https://www.youtube.com/watch?v=8inEr1c2UmE&list=PLKYTvTbXFuChaoF-L-1e9RzCagdLPQ
 
 Additionally, a lot of the material in these practicals are adapted from Hijmans and Elith (2011) - https://cran.r-project.org/web/packages/dismo/vignettes/sdm.pdf
 
-###Aims
+### Aims
 
-* To view, clip, format and export environmental resource data
+* To view, clip, format and export environmental data
 
 
 First we need to install the packages needed for this practical. If you did Lab 1 in R you will have already installed these and won't need to again.    
+
 ```{r, warning=F, message=F, eval=F}
 install.packages("raster")
 install.packages("maps")
@@ -30,14 +35,22 @@ library(maps)
 library(mapdata)
 ```
 
-And to create a folder to put the environmental variables in - you will need to create the folder first before setting it as your working directory for this lab. This folder should be separate to the one you saved the species locations in.
+As in Lab 1 we will create a folder to store the environmental variables in and then change this to the working directory.
+
 
 ```{r, eval=F}
+
+
+if (!dir.exists("~/SDM_Course/Env_Data")) {
+  #check if folder exists
+  dir.create("~SDM_Course/Env_Data")   #if it doesn't then create it
+}
+
 setwd("~/SDM_Course/Env_Data") 
 
 ```
 
-####Downloading environmental data
+#### Downloading environmental data
 
 Now we can download the bioclim data directly from Worldclim. The environmental data are made up of 19 bioclimatic variables, the details of which you can read about here: http://www.worldclim.org/bioclim
 
@@ -47,8 +60,7 @@ If you are a species of fairly restricted range you may be best of downloading t
 
 
 ```{r}
-
-env = getData("worldclim", var="bio", res=2.5)
+env <- getData("worldclim", var="bio", res=2.5)
 ```
 
 Once downloaded you can look at the resulting data by just running the command 'env'
@@ -56,11 +68,12 @@ Once downloaded you can look at the resulting data by just running the command '
 This will show you the RasterStack of downloaded data - this is a stack of 19 layers of raster data, one for each of the bioclim variables. You can also see some other basic information such as the spatial resolution of each cell and the extent of the rasters. As a side note rasters have to have the same extent, resolution and projection in order to be in a stack together.
 
 ```{r}
+
 env
 
 ```
 
-####Attaching names to the data and plotting it
+#### Attaching names to the data and plotting it
 
 
 We can change the names of the layers in the RasterStack to make them a bit more meaningful. Here I have written out the names of the bioclim variables and then attached them to the RasterStack using the names() function.
@@ -70,9 +83,30 @@ We can also plot the environmental data, If we just plot them all we get a small
 
 ```{r}
 
-bioclim_names<-c("Annual Mean Temp", "Mean Diurnal Range", "Isothermality", "Temp Seasonality", "Max Temp Warmest Month", "Min Temp Coldest Month", "Temp Annual Range", "Mean Temp Wettest Quarter","Mean Temp Driest Quarter", "Mean Temp Warmest Quarter", "Mean Temp Coldest Quarter", "Annual Precip", "Precip Wettest Month", "Precip Driest Month", "Precip Seasonality", "Precip Wettest Quarter", "Precip Driest Quarter", "Precip Warmest Quarter", "Precip Coldest Quarter")
+bioclim_names <-
+  c(
+    "Annual_Mean_Temp",
+    "Mean_Diurnal_Range",
+    "Isothermality",
+    "Temp_Seasonality",
+    "Max_Temp_Warmest Month",
+    "Min_Temp_Coldest_Month",
+    "Temp_Annual_Range",
+    "Mean_Temp_Wettest_Quarter",
+    "Mean_Temp_Driest_Quarter",
+    "Mean_Temp_Warmest_Quarter",
+    "Mean_Temp_Coldest_Quarter",
+    "Annual_Precip",
+    "Precip_Wettest_Month",
+    "Precip_Driest_Month",
+    "Precip_Seasonality",
+    "Precip_Wettest_Quarter",
+    "Precip_Driest_Quarter",
+    "Precip_Warmest_Quarter",
+    "Precip_Coldest_Quarter"
+  )
 
-names(env)<-bioclim_names
+names(env) <- bioclim_names
 
 plot(env)
 ```
@@ -81,25 +115,27 @@ We can look in more detail at the rasters within the stack - here are the first 
 
 ```{r}
 
-plot(env[[1]], main=names(env[[1]]))
 
-plot(env[[12]], main=names(env[12]))
+plot(env[[1]], main = names(env[[1]]))
+
+plot(env[[12]], main = names(env[12]))
 
 ```
 
 You might notice that some of the values seem a bit odd - in particular the temperature values which are a lot larger than they should be. This is to do with how the numbers are stored - it takes up less space to save an integer than a decimal so in order to maintain the accuracy of the data they are stored as values which are ten times larger than the 'real' values. We can fix this later by dividing these temperature layers by ten.
 
-####Cropping the environmental data
+#### Cropping the environmental data
 
 The data is currently at a global level, it needs to be cropped to the area of interest so that Maxent does not try to run the model for the whole world as that will take a really long time.
 
 We can read back in the location data from Lab 1 and then crop the raster data to the extent of those locations.
+
 ```{r,echo=F }
-capg<-read.csv("capra_locs.csv")
+capg <- read.csv("capra_locs.csv")
 ```
 
 ```{r,eval=F }
-capg<-read.csv("~/SDM_Course/Species_locs/capra_locs.csv")
+capg <- read.csv("~/SDM_Course/Species_locs/capra_locs.csv")
 ```
 
 To do this we need to create an extent object, which is a set of coordinates in this order - minimum longitude, maximum longitude, minimum latitude and finally maximum latitude.
@@ -108,10 +144,16 @@ Here we have taken the maximum and minimum values from the location points then 
 
 
 ```{r}
+buff <- 1   #a buffer of one degree around the raster
 
-e<-extent(min(capg$lon)-1,max(capg$lon)+1,min(capg$lat)-1,max(capg$lat)+1)    
-#should be in the order xmin,xmax,ymin,ymax
-envcrop <- crop(env,e)
+xmin <- min(capg$lon) - buff
+xmax <- max(capg$lon) + buff
+ymin <- min(capg$lat) - buff
+ymax <- max(capg$lat) + buff
+
+e <- extent(xmin, xmax, ymin, ymax)
+
+envcrop <- crop(env, e)
 
 ```
 
@@ -126,40 +168,49 @@ Now we can plot this cropped area and add the occurrence points on top.
 
 ```{r}
 
-plot(envcrop[[1]], main="Annual Mean Temperature")
-map('worldHires',xlim=c(min(capg$lon)-1,max(capg$lon)+1), 
-    ylim=c(min(capg$lat)-1,max(capg$lat)+1), fill=F, add=T)
-points(capg$lon, capg$lat, pch="+")
+plot(envcrop[[1]], main = "Annual Mean Temperature")
+map(
+  'worldHires',
+  xlim = c(xmin, xmax),
+  ylim = c(ymin, ymax),
+  fill = F,
+  add = T
+)
+
+points(capg$lon, capg$lat, pch = "+")
 
 ```
 
-####Dividing the temperature data by 10
+#### Dividing the temperature data by 10
 
 Now we can divide the temperature layers by 10 to get the 'real' values. The temperature layers are the ones which are numbered, 1,2,5,6,7,8,9,10 and 11. To do this we create a vector called 'ten_div', selecting the temperature layers, then write a 'for loop' which is essentially saying for each of 'layer' in 'ten_div' take that layer and divide it by ten and then put it back in the stack in the same location or layer it came from. 
 
 
 ```{r}
-ten_div<-c(1,2,5,6,7,8,9,10,11)  #the layers we want to divide by ten
+ten_div <-
+  c(1, 2, 5, 6, 7, 8, 9, 10, 11)  #the layers we want to divide by ten
 
-for (layer in ten_div){
-  
-  envcrop[[layer]]<-envcrop[[layer]]/10
-
-  }
-
+for (layer in ten_div) {
+  envcrop[[layer]] <- envcrop[[layer]] / 10
+}
 
 ```
 
-####Saving selected bioclim layers in Ascii format
-
+#### Saving selected bioclim layers in Ascii format
+ 
 Now you need to pick which of the bioclimatic variables you want to include in the Maxent model, try and pick ones which are most ecologically relevant to your species. Here I have picked the bioclimatic variables 1, 4, 11, 12, 14 and 19. They need to be exported as Ascii files as this is the file type required by Maxent.
 
 ```{r}
 
-layers<-c(1,4,11,12,14,19)
+layers <- c(1, 4, 11, 12, 14, 19)
 
-writeRaster(stack(envcrop[[layers]]), paste("bio",layers,sep=""), 
-            bylayer=TRUE, format='ascii', overwrite=T)
+writeRaster(
+  stack(envcrop[[layers]]),
+  paste0("bio", layers), #this names the files with a prefix of bio and then the number of the bioclim layer
+  bylayer = TRUE,
+  format = 'ascii',
+  overwrite = T
+)
 
 ```
 
