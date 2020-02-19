@@ -36,6 +36,8 @@ install.packages("mapdata")
 install.packages("dplyr")
 install.packages("CoordinateCleaner")
 install.packages("raster")
+install.packages("ggplot2")
+install.packages("scales")
 ```
 
 Then we need to load the packages into R using the library() command:
