@@ -10,7 +10,7 @@ geometry: margin=3cm
 
 ```{r, echo=FALSE, warning=F}
 library(knitr)
-#opts_chunk$set(tidy.opts=list(width.cutoff=10))
+opts_chunk$set(tidy.opts=list(width.cutoff=10),warning=FALSE)
 ```
 
 The following video by Richard Pearson is relevant for both this Lab and Lab 2:
@@ -35,6 +35,7 @@ install.packages("maps")
 install.packages("mapdata")
 install.packages("dplyr")
 install.packages("CoordinateCleaner")
+install.packages("raster")
 ```
 
 Then we need to load the packages into R using the library() command:
@@ -51,11 +52,16 @@ library(CoordinateCleaner)
 ```
 
 
-Next you need to create a folder to keep all of the files from this practical in, create separate folders for your species locations and for the environmental data. You will need to do this in your File Explorer and then set it as your working directory by putting in the correct file path in the code below. 
+Next you need to create a folder called 'SDM_Course', or similar, to keep all of the files from this practical in. Then create separate folders for your species locations and for the environmental data. The code below will check if a folder with the path "~SDM_Course/Species_Locs" exists and if it doesn't it will create it. It will then set this to the working directory.
 
 
 ```{r, eval=F}
-setwd("~/SDM_Models/Species_locs")
+
+if(!dir.exists("~/SDM_Course/Species_Locs")){
+  dir.create("~SDM_Course/Species_Locs", recursive = TRUE)
+}
+
+setwd("~/SDM_Models/Species_Locs")
 ```
 
 
@@ -93,7 +99,6 @@ capra <- dismo::gbif(
 ```
 The gbif() command is from the "dismo" package - if you had problems with installing it you can download the data directly from the GBIF website - http://www.gbif.org/   (You'll need to create an account). If dismo worked then skip ahead to  "Looking at the downloaded data"
 
-
 To download the data manually:
 
 Data -> Explore Species -> Type in your species -> Click on the name of your species -> Click "All X,XXX" to the right of the map -> Download -> Select Darwin Core Archive -> Download and extract file -> Copy and paste "occurrence.txt" to the folder you previously set as the working directory 
@@ -110,7 +115,6 @@ capra$lat <- capra$decimalLatitude
 
 ```
 
-
 #### Looking at the downloaded data
 
 We can count the number of records downloaded using the nrow() command
@@ -118,7 +122,6 @@ We can count the number of records downloaded using the nrow() command
 ```{r}
 nrow(capra) 
 ```
-
 
 The head() command will show you the first six rows of the data, including the longitude and latitude. A similar command is tail() for looking at the last six rows in the data.
 
@@ -171,7 +174,6 @@ clean_cap <- clean_cap %>%
 
 ```
 
-
 Now we can start plotting the data to make sure that they are where you expect them to be.
 
 The "maptools" package has some maps already built into it, here we use the "wrld_simpl" one as a quick way of visualising the data. 
@@ -184,9 +186,7 @@ The points() command plots the location points on top of the map, the pch argume
 
 #### Plotting the occurrence points
 
-
 ```{r}
-data(wrld_simpl)
 map(
   'worldHires',
   xlim = c(min(capgeo$lon) - 0.2, max(capgeo$lon) + 0.2),
@@ -205,14 +205,11 @@ points(capgeo$lon,
 ```
 Some of the location points may look unusually evenly spaced, why might this be?
 
-
-
 This plot shows all of the possible pch options in a variety of cex sizes.
 
 ```{r}
 plot(1:20, 1:20, pch=1:20, cex=rep(1:4))
 ```
-
 
 In order to enter the species locations into Maxent we need to create a csv (comma separated value) file with one column each for the species name, latitude and longitude. This file will automatically be saved in the working directory.
 
@@ -220,13 +217,10 @@ In order to enter the species locations into Maxent we need to create a csv (com
 #### Saving the occurences ready for Maxent
 
 ```{r}
-capc <- capgeo[, c("species", "lat", "lon")]
+capc <- capgeo %>% 
+  dplyr::select(species, lat, lon)
+
 write.csv(capc, "capra_locs.csv", row.names = FALSE)
 ```
 
-
 The next step is to gather some environmental data to input into Maxent, which we will do in Lab 2.
-
-
-
-
