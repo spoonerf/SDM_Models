@@ -1,14 +1,16 @@
 ---
 title: 'Lab 1: Biological Data'
-author: "Tutorial by [Fiona Spooner](https://github.com/spoonerf), following tutorials by Richard Pearson for [courses at UCL](https://www.ucl.ac.uk/lifesciences-faculty-php/courses/viewcourse.php?coursecode=BIOL0032)"
-output: html_notebook
+author: 'Tutorial by [Fiona Spooner](https://github.com/spoonerf), following tutorials by Richard Pearson for [courses at UCL](https://www.ucl.ac.uk/lifesciences-faculty-php/courses/viewcourse.php?coursecode=BIOL0032)'
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    df_print: paged
 geometry: margin=3cm
-
 ---
 
 ```{r, echo=FALSE, warning=F}
 library(knitr)
-opts_chunk$set(tidy.opts=list(width.cutoff=10))
+#opts_chunk$set(tidy.opts=list(width.cutoff=10))
 ```
 
 The following video by Richard Pearson is relevant for both this Lab and Lab 2:
@@ -17,10 +19,10 @@ https://www.youtube.com/watch?v=8inEr1c2UmE&list=PLKYTvTbXFuChaoF-L-1e9RzCagdLPQ
 
 Additionally, a lot of the material in these practicals are adapted from Hijmans and Elith (2011) - https://cran.r-project.org/web/packages/dismo/vignettes/sdm.pdf
 
-###Aims
+### Aims
 
 
-* To obtain some species occurence data
+* To obtain some species occurence data from GBIF
 
 * To produce a map of the species' occurrences
 
@@ -32,6 +34,7 @@ install.packages("maptools")
 install.packages("maps")
 install.packages("mapdata")
 install.packages("dplyr")
+install.packages("CoordinateCleaner")
 ```
 
 Then we need to load the packages into R using the library() command:
@@ -44,6 +47,7 @@ library(maptools)
 library(maps)    
 library(mapdata) 
 library(dplyr)
+library(CoordinateCleaner)
 ```
 
 
@@ -58,7 +62,7 @@ setwd("~/SDM_Models/Species_locs")
 Now we can download species location data from GBIF, this code will download data for the Alpine ibex _(Capra ibex)_, but you can change it to the binomial of whichever species you are interested in.
 
 
-####Downloading Data
+#### Downloading Data
 
 First of all we can count the number of records available for your chosen species. This is to ensure that there are enough records (>~100) but not too many, the function to download records will not work if there are more than 200,000 records. Also downloading the data can take quite a while so we want to check there is a reasonable number of records before downloading them. 
 
@@ -79,10 +83,10 @@ There are about 50,000 records for the Alpine ibex so we can go ahead and downlo
 
 ```{r, eval = FALSE}
 capra <- dismo::gbif(
-      genus = "capra",
+      genus = "Capra",
       species = "ibex",
-      geo = TRUE,
-      removeZeros = TRUE,
+      geo = TRUE, #only downloads ones with location data
+      removeZeros = TRUE, # ignores locations where either lat or lon are 0
       download = TRUE
     )
 
@@ -98,7 +102,8 @@ Here we also create two new columns, "lon" and "lat" so that the column names ar
 
 ```{r, eval=TRUE}
 
-capra <- read.delim("occurrence.txt",header = TRUE) 
+
+capra <- read.delim("occurrence.txt", header = TRUE)
 
 capra$lon <- capra$decimalLongitude
 capra$lat <- capra$decimalLatitude
@@ -106,7 +111,7 @@ capra$lat <- capra$decimalLatitude
 ```
 
 
-####Looking at the downloaded data
+#### Looking at the downloaded data
 
 We can count the number of records downloaded using the nrow() command
 
@@ -129,32 +134,39 @@ Here we use the dplyr package which is really good for handling data. The [dplyr
 
 In the case of the Alpine ibex this removes a large amount of the data and we are left with about 1,800 records. 
 
-####Cleaning the occurrence data
+#### Cleaning the occurrence data
 
 ```{r}
+#A rough extent of the European Alps
 xmin <- 6
 xmax <- 14.5
-ymin <- 43 
+ymin <- 43
 ymax <- 49
 
-capgeo <- capra %>% 
-  select(species, lat, lon) %>% 
-  filter(complete.cases(.)) %>% 
-  filter(lon > xmin & lon < xmax & lat > ymin & lat < ymax) %>% 
-  distinct()
-  
-  
+capgeo <- capra %>%
+  select(species, lat, lon) %>% #selecting columns
+  filter(complete.cases(.)) %>%  #removing any rows with NA in
+  filter(lon > xmin &
+           lon < xmax &
+           lat > ymin & lat < ymax) %>%  #excluding points outside the alps
+  distinct() #getting unique points
+
+
 nrow(capgeo)
 ```
 
 We can also use the [CoordinateCleaner](https://cran.r-project.org/web/packages/CoordinateCleaner/index.html) package to automatically clean the coordinates. This runs through a series of rules and flags whether each coordinate breaks any of the rules. We can filter out rows in which the coordinates break any of the rules using the code below. 
 
 ```{r}
-clean_cap <- clean_coordinates(capgeo, lat = "lat", lon = "lon", species = "species")
+clean_cap <-
+  clean_coordinates(capgeo,
+                    lat = "lat",
+                    lon = "lon",
+                    species = "species")
 
 head(clean_cap)
 
-clean_cap <- clean_cap %>% 
+clean_cap <- clean_cap %>%
   filter(.summary == TRUE)
 
 ```
@@ -170,19 +182,30 @@ The box() command plots an empty box around the frame of the map as the axes can
 
 The points() command plots the location points on top of the map, the pch argument selects the character used to represent location points and the cex argument can be used to change the size of the points.
 
-####Plotting the occurrence points
+#### Plotting the occurrence points
 
 
 ```{r}
 data(wrld_simpl)
-plot(wrld_simpl, xlim=c(min(capgeo$lon)-1,max(capgeo$lon)+1), 
-     ylim=c(min(capgeo$lat)-1,max(capgeo$lat)+1), axes=TRUE, 
-     col="light grey")
+map(
+  'worldHires',
+  xlim = c(min(capgeo$lon) - 0.2, max(capgeo$lon) + 0.2),
+  ylim = c(min(capgeo$lat) - 0.2, max(capgeo$lat) + 0.2),
+  fill = T,
+  col = "light grey"
+)
 
 box()
 
-points(capgeo$lon, capgeo$lat, col="orange", pch=20, cex=0.7)
+points(capgeo$lon,
+       capgeo$lat,
+       col = "orange",
+       pch = 20,
+       cex = 0.7)
 ```
+Some of the location points may look unusually evenly spaced, why might this be?
+
+
 
 This plot shows all of the possible pch options in a variety of cex sizes.
 
@@ -190,75 +213,15 @@ This plot shows all of the possible pch options in a variety of cex sizes.
 plot(1:20, 1:20, pch=1:20, cex=rep(1:4))
 ```
 
-If your species locations are where you would expect then you can skip to the last two steps.
-
-I am expecting my species locations to be in the European Alps, the other records may be other sub-species, where the lat and long are the wrong way round, where negative symbols have been missed out, or sometimes when the species is found in a zoo. To deal with this we need to clean the data:
-
-We need to remove the duplicates, firstly we can do this by identifying them using the duplicated() command, which provides a TRUE if the combination of longitude and latitude are a duplicate or FALSE if they are unique. Secondly we can use the square brackets to remove the rows of our data frame which are recorded as having a duplicate. 
-
-
-####Cleaning the data
-
-
-For this species I know that all of the latitude and longitude values should be positive, because I expect it to be only found in the northern and eastern hemispeheres.This means we can change any potentially erroneous negative values to be positive. This may not be the case for your species so think carefully about this before doing it.
-
-First of all we identify any values that have a negative longitude value, then multiply these longitude values by negative one so that they are now positive. Then do the same with the latitude values.
-
-
-```{r}
-i <- capg$lon < 0    
-capg$lon[i] <- -1 * capg$lon[i]
-
-j <-capg$lat < 0
-capg$lat[j] <- -1 * capg$lat[j]
-```
-
-
-Now we can plot the points again to see if we still have any erroneous points:
-
-
-```{r}
-plot(wrld_simpl, xlim=c(min(capg$lon)-1,max(capg$lon)+1), 
-     ylim=c(min(capg$lat)-1,max(capg$lat)+1), axes=TRUE, 
-     col="light grey")
-box()
-points(capg$lon, capg$lat, col="orange", pch=20, cex=0.75)
-```
-
-
-It still looks like we have quite a few errors, so we can now subset out location points which are beyond certain latitudinal or longitudinal extents. Here we are only including locations between 0-25^o^E and more than 43^o^N, this is because I know this is an alpine species so I am only including those points. 
-
-
-```{r}
-capg2 <- capg[capg$lon > 0 & capg$lon<25 & capg$lat > 43 , ] 
-nrow(capg2) 
-```
-
-
-Let's plot the points againt to see if it looks more reasonable, this time with a higher resolution background map, using the "maps" and "mapdata" package:
-
-####Plotting the cleaned occurrence points
-  
-```{r}
-map('worldHires',xlim=c(min(capg2$lon)-1,max(capg2$lon)+1), 
-    ylim=c(min(capg2$lat)-1,max(capg2$lat)+1), fill=T, 
-    col="light grey")
-map.axes()
-points(capg2$lon, capg2$lat, col="orange", pch=20, cex=0.75)
-
-```
-
-Some of the location points may look unusually evenly spaced, why might this be?
-
 
 In order to enter the species locations into Maxent we need to create a csv (comma separated value) file with one column each for the species name, latitude and longitude. This file will automatically be saved in the working directory.
 
 
-####Saving the occurences ready for Maxent
+#### Saving the occurences ready for Maxent
 
 ```{r}
-capc<-capg2[ , c("species","lat","lon")]
-write.csv(capc, "capra_locs.csv",row.names=FALSE)
+capc <- capgeo[, c("species", "lat", "lon")]
+write.csv(capc, "capra_locs.csv", row.names = FALSE)
 ```
 
 
