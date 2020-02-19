@@ -1,10 +1,11 @@
 ---
-title: 'Lab 3: Running a Maxent SDM'
+title: 'Lab 3: Running a species distribution model in Maxent'
 author: 'Tutorial by [Fiona Spooner](https://github.com/spoonerf), following tutorials by Richard Pearson for [courses at UCL](https://www.ucl.ac.uk/lifesciences-faculty-php/courses/viewcourse.php?coursecode=BIOL0032)'
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
-  html_document:
-    df_print: paged
+  prettydoc::html_pretty:
+    theme: leonids
+    highlight: github
 geometry: margin=3cm
 ---
 
@@ -15,7 +16,7 @@ setwd("C:/Users/Fiona/Desktop/SDM_Course")
 ```
 
 
-###Aims
+### Aims
 
 
 
@@ -109,6 +110,7 @@ install.packages("maps")
 install.packages("maptools")
 install.packages("ggplot2")
 install.packages("scales")
+install.packages("rgdal")
 ```
 
 And load them in using the library function:
@@ -119,19 +121,26 @@ library(maps)
 library(mapdata)
 library(ggplot2)
 library(scales)
+library(rgdal)
 ```
 
 Let's load back in the species location data so we can plot it on top of the model results.
 ```{r, echo=F}
-capg<-read.csv("capra_locs.csv")
+capg <- read.csv("capra_locs.csv")
 ```
 
 
-Next let's input this file back into R as a raster and have a look at it.
+Next let's input this file back into R as a raster and have a look at it. We can also get the extent of the raster and store these in some objects that we will use later. 
 ```{r}
-capout<-raster("Capra_ibex.asc")
+capout <- raster("Capra_ibex.asc")
 plot(capout)
 points(capg$lon, capg$lat, pch="+")
+
+xmin <- extent(capout)[1]
+xmax <- extent(capout)[2]
+ymin <- extent(capout)[3]
+ymax <- extent(capout)[4]
+
 ```
 
 
@@ -139,7 +148,7 @@ Now, it is often desirable to set a decision threshold (threshold of occurrence)
 
 
 
-![](C:\Users\Fiona\Documents\PhD\SDM_Models\threshold.png)
+![](C:/Users/Fiona/Documents/PhD/SDM_Models/threshold.png)
 
 
 
@@ -153,17 +162,22 @@ For now, we can use the thresholds from this table (e.g., 0.011, 0.262) to redra
 We then use the reclassify function to reclassify the values in the model output as either 0 (species absent) or 1 (species present). We can plot out the resulting map of predicted presence and absence.
 
 ```{r}
-m <- c(0,0.011,0,0.011,1,1)
-rclmat <- matrix(m, ncol=3, byrow=TRUE)
+m <- c(0, 0.011, 0, 0.011, 1, 1)
+rclmat <- matrix(m, ncol = 3, byrow = TRUE)
 
-rclmat 
+rclmat
 
 rc <- reclassify(capout, rclmat)
 
 plot(rc)
-map('worldHires',xlim=c(min(capg$lon)-1,max(capg$lon)+1), 
-    ylim=c(min(capg$lat)-1,max(capg$lat)+1), fill=F, add=T)
-points(capg$lon, capg$lat, pch="+")
+map(
+  'worldHires',
+  xlim = c(xmin, xmax),
+  ylim = c(ymin, ymax),
+  fill = F,
+  add = T
+)
+points(capg$lon, capg$lat, pch = "+")
 
 ```
 
@@ -174,10 +188,10 @@ Let's try the 10 percentile training presence threshold to see what difference t
 
 
 ```{r}
-n <- c(0,0.262,0,0.262,1,1)
-rclmat2 <- matrix(n, ncol=3, byrow=TRUE)
+n <- c(0, 0.262, 0, 0.262, 1, 1)
+rclmat2 <- matrix(n, ncol = 3, byrow = TRUE)
 
-rclmat2 
+rclmat2
 
 rc2 <- reclassify(capout, rclmat2)
 ```
@@ -185,9 +199,14 @@ rc2 <- reclassify(capout, rclmat2)
 
 ```{r}
 plot(rc2)
-map('worldHires',xlim=c(min(capg$lon)-1,max(capg$lon)+1), 
-    ylim=c(min(capg$lat)-1,max(capg$lat)+1), fill=F, add=T)
-points(capg$lon, capg$lat, pch="+")
+map(
+  'worldHires',
+  xlim = c(xmin, xmax),
+  ylim = c(ymin, ymax),
+  fill = F,
+  add = T
+)
+points(capg$lon, capg$lat, pch = "+")
 ```
 
 Does this one look more realistic? Or does it look smaller than you might expect? If both the values look unrealistic you might want to pick a number in between.
@@ -203,106 +222,106 @@ You will need to download the Cultural -> Admin 0 – Countries data and also Ph
 
 You can use the readOGR() function to load these shapefiles into R. After "dsn=" you need to put the file path to the folder containing the .shp file and then after "layer=" you need to put the name of the shape file (.shp) but not including the .shp suffix.
 
-As I am focussing on an area in Europe I am going to reproject the maps from their default WGS84 projection to a Europe specific projection called LAEA. You can find all sorts of projections on http://spatialreference.org/ along with the codes required to project in them in R using the spTransform() function 
-
-If you aren't sure if you need to reproject your data just leave it in the default projection and skip the spTransform step.
-
 The fortify function changes shapefiles to dataframes, this is the format that ggplot requires. 
 
 ```{r}
 
-library(rgdal)
-world<-readOGR(dsn="C:/Users/Fiona/Documents/GIS/ne_10m_land", layer="ne_10m_land")
-world_laea<-spTransform(world, CRS("+proj=laea"))
-world_laea_df<-fortify(world_laea)
+world <-
+  readOGR(dsn = "C:/Users/Fiona/Documents/GIS/ne_10m_land", layer = "ne_10m_land")
+world_df <- fortify(world)
 
-countries<-readOGR(dsn="C:/Users/Fiona/Documents/GIS/ne_10m_admin_0_countries", layer="ne_10m_admin_0_countries")
-countries_laea<-spTransform(countries, CRS("+proj=laea"))
-countries_laea_df<-fortify(countries_laea)
+countries <-
+  readOGR(dsn = "C:/Users/Fiona/Documents/GIS/ne_10m_admin_0_countries", layer =
+            "ne_10m_admin_0_countries")
+countries_df <- fortify(countries)
 
 ```
 
-We also need to reproject the species occurrence data so that we can plot it on top of our model output data. There is a similar process here but instead of the fortify function, the data.frame function is used.
 
-```{r}
-coordinates(capg)<-c("lon","lat")
-proj4string(capg) <- CRS("+proj=longlat")
-capg_laea<-spTransform(capg, CRS("+proj=laea"))
-capg_laea_df<-data.frame(capg_laea)
-```
-
-
-Now we need to do a similar reprojection for the model output, here we do it for both the raw model output and the reclassified data. However there is an extra step before reprojecting, we need to define the projection as it doesn't have a default projection associated with, then we can reproject it.  
-
-Once again we have to turn these objects into dataframes, this time we us the rasterToPoints function followed by the data.frame function.
+We need to format the data for plotting with ggplot.
 
 ```{r}
 proj4string(rc2) <- CRS("+proj=longlat")
-rc_laea <- projectRaster(rc2, crs = "+proj=laea", method = "ngb" )  
 
 proj4string(capout) <- CRS("+proj=longlat")
-capout_laea <- projectRaster(capout, crs = "+proj=laea", method = "ngb" )
 
-rcp<-rasterToPoints(rc_laea)
+rcp <- rasterToPoints(rc2)
 rcpdf <- data.frame(rcp)
 #Make appropriate column headings
 colnames(rcpdf) <- c("Longitude", "Latitude", "Capra")
 
-capout2<-rasterToPoints(capout_laea)
-capout_df <- data.frame(capout2)
+capout_pts <- rasterToPoints(capout)
+capout_df <- data.frame(capout_pts)
 colnames(capout_df) <- c("Longitude", "Latitude", "Capra")
 ```
 
-Here we get the values for the extent of our map and a set a value for a buffer around these points, so that our species locations arent right at the edge of the map. 
+Setting the theme options for ggplot. 
 
 ```{r}
-xmin<-min(capg_laea_df$lon)
-xmax<-max(capg_laea_df$lon)
-ymin<-min(capg_laea_df$lat)
-ymax<-max(capg_laea_df$lat)
-buff<-350000
+theme_opts <- list(
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.background = element_rect(fill = 'white', colour = NA),
+    plot.background = element_rect(),
+    axis.line = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    plot.title = element_text()
+  )
+)
+
+
 ```
 
-
-
 ```{r}
-theme_opts<-list(theme(panel.grid.minor = element_blank(),
-                       panel.grid.major = element_blank(),
-                       panel.background = element_rect(fill = 'white', colour = NA),
-                       plot.background = element_rect(),
-                       axis.line = element_blank(),
-                       axis.text.x = element_blank(),
-                       axis.text.y = element_blank(),
-                       axis.ticks = element_blank(),
-                       axis.title.x = element_blank(),
-                       axis.title.y = element_blank(),
-                       plot.title = element_text()))
-
-
-ggplot(data=capout_df, aes(y=Latitude, x=Longitude)) +
-  geom_polygon(data=world_laea_df, aes(long,lat,group=group), fill="light grey")+
-  geom_raster(aes(fill=Capra))+
-  scale_fill_gradientn(colours=c("light grey","dark orange"))+
-  geom_path(data=countries_laea_df, aes(long,lat, group=group),color="black",size=0.1) +
-  geom_point(data=capg_laea_df, aes(lon, lat, group=NULL,fill=NULL ),size=1, shape=16 ) +
- coord_cartesian(xlim = c((xmin-buff),(xmax+buff)), ylim = c((ymin-buff),(ymax+buff)))+
+ggplot(data = capout_df, aes(y = Latitude, x = Longitude)) +
+  geom_polygon(data = world_df, aes(long, lat, group = group), fill =
+                 "light grey") +
+  geom_raster(aes(fill = Capra)) +
+  scale_fill_gradientn(colours = c("light grey", "dark orange")) +
+  geom_path(
+    data = countries_df,
+    aes(long, lat, group = group),
+    color = "black",
+    size = 0.1
+  ) +
+  geom_point(
+    data = capg,
+    aes(lon, lat, group = NULL, fill = NULL),
+    size = 1,
+    shape = 16
+  ) +
+  coord_cartesian(xlim = c(xmin, xmax), ylim = c(ymin, ymax)) +
   theme_opts
 ```
 
 
 ```{r}
-ggplot(data=rcpdf, aes(y=Latitude, x=Longitude)) +
-  geom_polygon(data=world_laea_df, aes(long,lat,group=group), fill="light grey")+
-  geom_raster(aes(fill=Capra))+
- scale_fill_gradientn(colours=c("light grey","dark orange"))+
-  geom_path(data=countries_laea_df, aes(long,lat, group=group),color="black",size=0.1) +
-  geom_point(data=capg_laea_df, aes(lon, lat, group=NULL,fill=NULL ),size=1, shape=16 ) +
- coord_cartesian(xlim = c((xmin-buff),(xmax+buff)), ylim = c((ymin-buff),(ymax+buff)))+
-  theme(legend.position = "none")+
+ggplot(data = rcpdf, aes(y = Latitude, x = Longitude)) +
+  geom_polygon(data = world_df, aes(long, lat, group = group), fill = "light grey") +
+  geom_raster(aes(fill = Capra)) +
+  scale_fill_gradientn(colours = c("light grey", "dark orange")) +
+  geom_path(
+    data = countries_df,
+    aes(long, lat, group = group),
+    color = "black",
+    size = 0.1
+  ) +
+  geom_point(
+    data = capg,
+    aes(lon, lat, group = NULL, fill = NULL),
+    size = 1,
+    shape = 16
+  ) +
+  coord_cartesian(xlim = c(xmin, xmax ), ylim = c(ymin, ymax)) +
+  theme(legend.position = "none") +
   theme_opts
 
 ```
 
-Experiment with different ways of mapping the resulting data.
 
 

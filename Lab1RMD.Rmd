@@ -3,8 +3,9 @@ title: 'Lab 1: Biological Data'
 author: 'Tutorial by [Fiona Spooner](https://github.com/spoonerf), following tutorials by Richard Pearson for [courses at UCL](https://www.ucl.ac.uk/lifesciences-faculty-php/courses/viewcourse.php?coursecode=BIOL0032)'
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
-  html_document:
-    df_print: paged
+  prettydoc::html_pretty:
+    theme: leonids
+    highlight: github
 geometry: margin=3cm
 ---
 

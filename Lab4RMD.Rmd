@@ -1,7 +1,12 @@
 ---
 title: 'Lab 4: SDM Evaluation and Projection'
-author: "Tutorial by Fiona Spooner, following tutorials by Richard Pearson for courses at UCL"
-output: html_document
+author: 'Tutorial by [Fiona Spooner](https://github.com/spoonerf), following tutorials by Richard Pearson for [courses at UCL](https://www.ucl.ac.uk/lifesciences-faculty-php/courses/viewcourse.php?coursecode=BIOL0032)'
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  prettydoc::html_pretty:
+    theme: leonids
+    highlight: github
+geometry: margin=3cm
 ---
 
 A lot of the material in these practicals are adapted from Hijmans and Elith (2011) - https://cran.r-project.org/web/packages/dismo/vignettes/sdm.pdf
@@ -27,7 +32,7 @@ When the model has run, open the html results file. Notice the picture of your m
 Take a look at the results table in the html file, which will now have two additional columns on the right-hand end compared with lab 3; for example:
 
 
-![](C:\Users\Fiona\Desktop\SDM_Course\maxent_pic_lab4.png)
+![](C:/Users/Fiona/Documents/PhD/SDM_Course\maxent_pic_lab4.png)
 
 
 These new columns present evaluation results at different thresholds. Remember we are interested in the minimum training presence, and the 10 percentile training presence. The test omission rate is the fraction of test points (i.e., the 30% of points that you randomly selected) that are omitted from the prediction. The P-value is from the binomial test.
@@ -36,7 +41,7 @@ So, from these results we could state that: based on 30% test data and a minimum
 
 The html file also shows your ROC curve, for example:
 
-![](C:\Users\Fiona\Desktop\SDM_Course\maxent_pic_lab4b.png)
+![](C:/Users/Fiona/Documents/PhD/SDM_Course/maxent_pic_lab4b.png)
 
 There are curves for your training data in red (i.e, 70% of records) and your test data in blue (30% of records). You'll see that the software has calculated the AUCs for each curve - it is the test data value that we are most interested in, since this provides a more independent test of the model. So, you can state in your project write up, for example: AUC based on 30% test data = 0.901.
 
@@ -50,9 +55,9 @@ When running the model you should follow an identical process to that in lab 3 -
 
 So, let's go ahead and create some projection layers:
 
-#####Projecting to a different region
+##### Projecting to a different region
 
-```{r, eval=F}
+```{r, eval=F, echo = FALSE}
 install.packages("raster")
 ```
 
@@ -108,7 +113,7 @@ writeRaster(stack(NAcrop2[[c(1,4,11,12,14,19)]]), names(NAcrop2[[c(1,4,11,12,14,
 Skip the next stage and put these North American environmental data into Maxent.
 
 
-#####Projecting into the future
+##### Projecting into the future
 
 
 Here you can use a future climate scenario for the 2050s. Future scenarios can be downloaded from the WorldClim website (or an older version can be obtained directly from Richard Pearson). There are numerous emissions scenarios (RCPs) and GCMs to choose from - it is usually advisable to select just two scenarios (e.g., one 'high' and one 'low') and one or two GCMs. The 19 bioclimate variables are the same as we've used previously. You should follow the same steps that you undertook in Lab 2. The only difference is that this time the data you are extracting is for a future climate scenario. You might want to select a larger spatial extent this time (e.g., for my example I used the whole of North America rather than just the east) because you would expect the distribution of suitable climate to move in the future (most likely, away from the equator). Save your new ASCII grids in a new folder (for example, I named my folder 'bio_NAmer_2050'). 
@@ -182,7 +187,7 @@ writeRaster(stack(env50crop[[c(1,4,11,12,14,19)]]), names(env50crop[[c(1,4,11,12
 To project to the new layers, simply navigate to the directory that contains the ASCII grids in the box 'Projection layers directory/file'. Your interface will now look something like this:
 
 
-![](C:\Users\Fiona\Desktop\SDM_Course\future.png)
+![](C:/Users/Fiona/Documents/PhD/SDM_Course/future.png)
 
 
 It is also a good idea to set up a new output folder for your new results.
